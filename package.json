@@ -1,0 +1,9 @@
+{
+  "name": "rainy-night-konbini",
+  "private": true,
+  "type": "module",
+  "description": "日式雨夜便利商店街角的三渲二微縮場景",
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}
