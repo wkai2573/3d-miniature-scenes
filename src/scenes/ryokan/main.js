@@ -14,6 +14,7 @@ import { buildGroundcover } from './groundcover.js';
 import { startWind } from './wind.js';
 import { buildFallingLeaves } from './fallingLeaves.js';
 import { buildAtmosphere } from './atmosphere.js';
+import { buildSound } from './sound.js';
 import { onLevel } from './shapes.js';
 import { LV } from './layout.js';
 
@@ -32,6 +33,7 @@ buildGroundcover();
 buildFallingLeaves();
 buildAtmosphere();
 startWind();
+buildSound();
 
 staticBatch(scene);
 

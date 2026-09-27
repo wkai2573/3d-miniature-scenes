@@ -1,5 +1,5 @@
 // 場景選單：左上角的按鈕展開場景卡片，選了別的場景就交給轉場布幕（src/ui/veil.js）換頁。
-// 鍵盤：M 開關選單、Esc 關閉、數字鍵直接切換、選單開著時上下鍵在卡片間移動。
+// 鍵盤：M 開關選單、Esc 關閉、數字鍵直接切換、選單開著時上下鍵在卡片間移動、S 開關環境音。
 import { SCENES } from './scenes.js';
 
 const nav = document.getElementById('scene-menu');
@@ -39,8 +39,27 @@ function initMenu(nav) {
           </a>
         </li>`).join('')}
       </ul>
-      <p class="sm-keys"><span><kbd>M</kbd> 開關選單</span><span><kbd>1</kbd>–<kbd>${SCENES.length}</kbd> 切換場景</span><span><kbd>Esc</kbd> 關閉</span></p>
+      <p class="sm-keys"><span><kbd>M</kbd> 開關選單</span><span><kbd>1</kbd>–<kbd>${SCENES.length}</kbd> 切換場景</span><span><kbd>S</kbd> 聲音</span><span><kbd>Esc</kbd> 關閉</span></p>
     </div>`;
+
+  // ---- 右上角的聲音按鈕：狀態由 src/engine/audio.js 用 sound:state 事件告訴這裡，場景沒載入就不出現 ----
+  const snd = document.createElement('button');
+  snd.className = 'snd';
+  snd.type = 'button';
+  snd.hidden = true;
+  snd.setAttribute('aria-label', '環境音');
+  snd.style.setProperty('--accent', current.accent);
+  snd.innerHTML = '<span class="snd-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>'
+    + '<span class="snd-tip" aria-hidden="true">點一下畫面，播放環境音</span>';
+  document.body.appendChild(snd);
+  addEventListener('sound:state', e => {
+    const s = e.detail.state;
+    snd.hidden = false;
+    snd.dataset.state = s;
+    snd.setAttribute('aria-pressed', String(s === 'on'));
+    snd.title = (s === 'on' ? '關閉環境音' : '播放環境音') + '（S）';
+  });
+  snd.addEventListener('click', () => dispatchEvent(new Event('sound:toggle')));
 
   const toggle = nav.querySelector('.sm-toggle');
   const panel = nav.querySelector('.sm-panel');
@@ -73,6 +92,7 @@ function initMenu(nav) {
     const r = (from ?? toggle).getBoundingClientRect();
     const d = { no: no(s), title: s.title, desc: s.desc, accent: s.accent, veil: s.veil };
     setOpen(false, false);
+    dispatchEvent(new Event('scene:leave'));   // 環境音跟著淡出
     const veil = window.__veil;
     (veil ? veil.cover(d, r.left + r.width / 2, r.top + r.height / 2) : Promise.resolve())
       .catch(() => {})
@@ -100,6 +120,9 @@ function initMenu(nav) {
     } else if ((k === 'm' || k === 'M') && !e.repeat) {
       e.preventDefault();
       setOpen(!open, true);
+    } else if ((k === 's' || k === 'S') && !e.repeat) {
+      e.preventDefault();
+      dispatchEvent(new Event('sound:toggle'));
     } else if (/^[1-9]$/.test(k) && !e.repeat && SCENES[k - 1]) {
       e.preventDefault();
       go(SCENES[k - 1], open ? cards[k - 1].querySelector('.sm-thumb') : null);
@@ -112,8 +135,10 @@ function initMenu(nav) {
 
   // 第一次載入：場景畫出來後按鈕才滑進來。有轉場布幕時按鈕要先就位，布幕才能收進它
   const show = instant => {
-    nav.classList.toggle('is-instant', instant);
-    nav.classList.add('is-ready');
+    for (const el of [nav, snd]) {
+      el.classList.toggle('is-instant', instant);
+      el.classList.add('is-ready');
+    }
   };
   if (window.__veil?.active) show(true);
   else if (window.__sceneStarted) show(false);

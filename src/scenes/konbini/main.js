@@ -12,6 +12,7 @@ import { buildStreet } from './street.js';
 import { buildTraffic } from './traffic.js';
 import { buildBuildings } from './buildings.js';
 import { buildWeather } from './weather.js';
+import { buildSound } from './sound.js';
 
 // 貼圖上會畫到的日文字元（新增文字時請一併加入）
 const GLYPHS = 'ことりマート止まれおでん全品円秋の新作焼きいもつめた〜あっか飲み物にぎ・弁当菓子カップ麺日用料らげ肉コロケフェ'
@@ -27,6 +28,7 @@ const { lampPositions } = buildStreet();
 buildTraffic();
 buildBuildings();
 buildWeather({ lampPositions });
+buildSound();
 
 staticBatch(scene);
 

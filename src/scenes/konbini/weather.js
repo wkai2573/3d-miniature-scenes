@@ -5,6 +5,7 @@ import { scene, U, DPR, PI, reduceMotion, onTick } from '../../engine/context.js
 import { rng, rand, pick } from '../../engine/random.js';
 import { glow } from '../../engine/materials.js';
 import { tmp } from '../../engine/geometry.js';
+import { cue } from '../../engine/audio.js';
 
 export function buildWeather({ lampPositions }) {
   buildRain(lampPositions);
@@ -123,6 +124,8 @@ function buildDrips() {
         if (f < d.tf) { y = d.y0 - 4.9 * f * f; s = 1; sy = 2.4; }   // 自由落下
         else rs = 0.03 + (f - d.tf) * 0.5;                             // 落地漣漪
       }
+      if (d.pu < hang + d.tf && u >= hang + d.tf) cue('drip', d.x, d.z);   // 落地的那一格發出水滴聲
+      d.pu = u;
       drop.setMatrixAt(i, tmp.m4.compose(tmp.p.set(d.x, y, d.z), tmp.q.identity(), tmp.s.set(s, s * sy, s)));
       ring.setMatrixAt(i, tmp.m4.compose(tmp.p.set(d.x, 0.03, d.z), tmp.q.identity(), tmp.s.set(rs, 1, rs)));
     });

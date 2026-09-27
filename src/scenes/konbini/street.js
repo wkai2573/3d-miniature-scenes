@@ -7,6 +7,7 @@ import { canvasTex, rr, txt } from '../../engine/canvas.js';
 import { toon, glow } from '../../engine/materials.js';
 import { G, add, box, cyl, plane, rod, grp } from '../../engine/geometry.js';
 import { bicycle } from './props.js';
+import { cue } from '../../engine/audio.js';
 
 // 回傳路燈位置，給雨絲 shader 做打光
 export function buildStreet() {
@@ -135,7 +136,10 @@ function buildLamps({ PA, PB, PC, PD }) {
   // 巷口路燈偶爾暗一下
   let next = 14, end = 0;
   onTick(t => {
-    if (!reduceMotion && t > next) { end = t + rand(0.2, 0.5); next = t + rand(15, 30); }
+    if (!reduceMotion && t > next) {
+      end = t + rand(0.2, 0.5); next = t + rand(15, 30);
+      cue('flicker', alleyLamp.position.x, alleyLamp.position.y, alleyLamp.position.z, end - t);
+    }
     alleyLamp.intensity = t < end ? 45 * (Math.sin(t * 40) > 0 ? 1 : 0.55) : 45;
   });
   return positions;

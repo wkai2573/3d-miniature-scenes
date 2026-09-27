@@ -11,6 +11,7 @@ import { G, add, box, cyl, plane, rod, grp } from '../../engine/geometry.js';
 import { glassPane } from './shaders/glass.js';
 import { acUnit } from './props.js';
 import { WALL, FRAME, KICK, CANOPY, CORAL, MUSTARD, TEAL, CREAM } from './palette.js';
+import { cue } from '../../engine/audio.js';
 
 export function buildStoreExterior() {
   // ---- 地板 ----
@@ -84,7 +85,7 @@ function buildAutoDoor() {
 
   let next = 4, t0 = -10;
   onTick(t => {
-    if (t > next) { t0 = t; next = t + rand(9, 16); }
+    if (t > next) { t0 = t; next = t + rand(9, 16); cue('door'); }
     const e = t - t0;
     let k = 0;
     if (e < 0.8) k = e / 0.8; else if (e < 3.2) k = 1; else if (e < 4.1) k = 1 - (e - 3.2) / 0.9;
@@ -150,12 +151,12 @@ function buildSigns() {
   plane(10.1, 1.0, frontMat, -1, 3.27, 1.012);
   plane(3.7, 1.0, sideMat, 4.012, 3.27, -0.9, { ry: PI / 2 });
 
-  const flick = [{ m: frontMat, next: 6, end: 0 }, { m: sideMat, next: 11, end: 0 }];
+  const flick = [{ m: frontMat, next: 6, end: 0, at: [-1, 3.27, 1.1] }, { m: sideMat, next: 11, end: 0, at: [4.1, 3.27, -0.9] }];
   onTick(t => {
     for (const f of flick) {
       let k = 1;
       if (!reduceMotion) {
-        if (t > f.next) { f.end = t + rand(0.25, 0.7); f.next = t + rand(8, 18); }
+        if (t > f.next) { f.end = t + rand(0.25, 0.7); f.next = t + rand(8, 18); cue('flicker', ...f.at, f.end - t); }
         if (t < f.end) k = Math.sin(t * 57) > 0.25 ? 0.6 : 1;
       }
       f.m.color.setScalar(1.25 * k);

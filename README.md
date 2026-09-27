@@ -15,6 +15,17 @@
 | 雨夜のことりマート | `index.html` | 三渲二（toon 著色＋描邊） | 深夜下雨的街角便利商店。雨絲與地面水花、帶雨痕的玻璃、濕路面倒影、依週期輪替的紅綠燈，店內有貨架、關東煮和咖啡機 |
 | 秋夜の紅葉屋 | `ryokan.html` | 柔和低多邊形＋SSAO | 浮在晚秋夜空中的溫泉旅館浮島。後山、台地、庭園、參道四層高低差，五裂楓葉樹冠、陣風與落葉模擬、池塘倒影與漣漪、露天風呂的湯けむり、月亮與雲海 |
 
+## 環境音
+
+兩個場景都有環境音，預設開啟。瀏覽器規定要等使用者互動才能出聲，所以第一次點一下畫面（或按任何鍵）之後才會開始播放。右上角的按鈕或 `S` 鍵可以開關，設定會記住。
+
+| 場景 | 鋪底（錄音） | 跟畫面同步的聲音 |
+|---|---|---|
+| 雨夜のことりマート | 雨聲、雨棚下的滴水與排水溝 | 屋簷水滴落進水窪、自動門開關與入店鈴、招牌與路燈閃爍時的電流聲 |
+| 秋夜の紅葉屋 | 樹葉的沙沙聲、秋蟲 | 陣風時枯葉被捲起、秋蟲在陣風時停下；鹿威し倒水與敲擊聲；小瀑布、湯口、蹲踞的水聲 |
+
+聲音都放在場景裡的實際位置：拉近店門口、池塘或蹲踞，那裡的聲音會變清楚，轉動視角時左右聲道也會跟著換。錄音都是 CC0 授權，來源見 [assets/audio/CREDITS.md](assets/audio/CREDITS.md)；其餘的聲音是在瀏覽器裡即時合成的。
+
 ## 執行
 
 需要 Node.js（建議 18 以上），以及能連到 `cdn.jsdelivr.net`（three.js）和 Google Fonts 的網路。
@@ -58,6 +69,7 @@ $env:PORT=8080; npm start      # PowerShell
 | `1`～`9` | 直接切換到第 N 個場景 |
 | `↑` `↓` | 選單開啟時在卡片間移動 |
 | `Esc` | 關閉選單 |
+| `S`、右上角按鈕 | 開關環境音 |
 
 - 系統開啟「減少動態效果」時，雨絲和落葉的數量會減少，部分飄動效果停用，轉場布幕改成簡短的淡入淡出。
 - 在紅葉屋的網址後面加上 `#noao`（`ryokan.html#noao`）可以關閉 SSAO，方便在較弱的顯示卡上比較效能。
@@ -71,8 +83,10 @@ server.mjs              零相依的本機靜態伺服器
 .github/workflows/      推送 main 時自動部署到 GitHub Pages
 css/
   style.css             畫布、載入提示、錯誤訊息
-  menu.css              場景選單與轉場布幕
-assets/thumbs/          選單卡片縮圖（640 × 400）
+  menu.css              場景選單、聲音按鈕與轉場布幕
+assets/
+  thumbs/               選單卡片縮圖（640 × 400）
+  audio/                環境音錄音（來源與授權見 CREDITS.md）
 src/
   boot.js               一般腳本，比模組先執行；載入失敗時把原因顯示在畫面上
   engine/               兩個場景共用的引擎
@@ -94,11 +108,12 @@ src/
 | [lights.js](src/engine/lights.js) | 物理單位的點光源 |
 | [noise.js](src/engine/noise.js) | 3D value noise，用在岩石表面、地形起伏和落葉的旋渦氣流 |
 | [random.js](src/engine/random.js) | 固定種子的亂數，每次打開的場景都一樣 |
+| [audio.js](src/engine/audio.js) | 環境音：場景用 `ambience()` 註冊錄音與合成音效，畫面上的事件用 `cue()` 發出聲音 |
 
 ### 場景選單（`src/ui/`）
 
 - [scenes.js](src/ui/scenes.js)：場景目錄，選單卡片與轉場布幕都讀這份清單。
-- [menu.js](src/ui/menu.js)：左上角的選單按鈕與場景卡片。
+- [menu.js](src/ui/menu.js)：左上角的選單按鈕與場景卡片，以及右上角的聲音按鈕。
 - [veil.js](src/ui/veil.js)：換頁時的圓形轉場布幕。舊頁面蓋上布幕後換頁，新頁面等到場景畫出第一格（`scene:ready`）才收起布幕。
 
 ## 技術重點
@@ -109,6 +124,7 @@ src/
 - **紅葉屋的地形**：[terrain.js](src/scenes/ryokan/terrain.js) 的 `heightAt(x, z)` 是純函式，建模、擺放物件和落葉模擬都用它查地面高度。主屋、溫泉這類模組先在平地上蓋好，再用 `onLevel()` 整組抬上台地。
 - **葉片**：[foliage.js](src/scenes/ryokan/foliage.js) 把數千片葉子的變換直接烘進頂點並合併成一個網格。葉片法線與葉團的球面法線混合，所以受光柔和，輪廓又看得出一片片葉子。
 - **風與落葉**：[wind.js](src/scenes/ryokan/wind.js) 用 `onBeforeCompile` 在 shader 裡擺動樹葉與草，每隔 14～22 秒吹來一陣風；[fallingLeaves.js](src/scenes/ryokan/fallingLeaves.js) 在 CPU 上模擬約 440 片落葉，會落地、漂在池面上激起漣漪，或飄出島緣墜入雲海。
+- **環境音**：錄音每次從音檔裡隨機挑一段、用等功率交叉淡化接起來，所以聽不出循環點。定點的聲音接上 `PannerNode`，聽者每格跟著相機移動，拉近就變大聲、轉動視角就換左右聲道。滴水、自動門、鹿威し這類事件由場景程式在畫面發生的那一格呼叫 `cue()`，聲音和動畫同步。
 
 ## 新增場景
 
@@ -116,6 +132,7 @@ src/
 2. 複製 [ryokan.html](ryokan.html) 成新頁面，修改 `<title>`、`<nav id="scene-menu" data-current="<id>">` 與最後一行的 `main.js` 路徑。
 3. 在 [src/ui/scenes.js](src/ui/scenes.js) 加一筆資料：`id`、`href`、`title`、`desc`、`when`、`style`、`thumb`、`accent`（強調色）、`veil`（轉場布幕的外圈與中心色）。
 4. 放一張 640 × 400 的縮圖到 `assets/thumbs/`。
+5. （選用）加上環境音：參考現有場景的 `sound.js`，用 `ambience()` 註冊音檔與合成音效，音檔放在 `assets/audio/<id>/`，並把來源寫進 [CREDITS.md](assets/audio/CREDITS.md)。
 
 貼圖上會畫到的日文字元要加進該場景 `main.js` 的 `GLYPHS`，字型才會預先載入。
 

@@ -11,6 +11,7 @@ import { waterMesh } from './water.js';
 import { C } from './palette.js';
 import { HX, LV, ZEN, ZEN_ROCKS, PATH, PATH_B, PATH_UP, POND, BRIDGE, FALL, SPRING, TSUKUBAI, GATE, LANTERNS, INN } from './layout.js';
 import { heightAt, pondE, wallUpZ } from './terrain.js';
+import { cue } from '../../engine/audio.js';
 
 // 燈火：給 atmosphere 做搖曳 { light?, base?, mat?, k?, color? }
 export const flames = [];
@@ -300,9 +301,15 @@ function buildTsukubai() {
   cyl(0.047, 0.047, 0.02, C.bambooDark, 0.1, -0.01, 0, { parent: pivot, rz: PI / 2, seg: 8 });   // 竹節
   // 週期：開口端（+x）朝上慢慢注水 → 變重後快速傾倒倒水 → 回彈，尾端敲在石頭上
   const REST = 0.32, TIP = -0.5, CYCLE = 9;
+  const KNOCK = 7.65 + PI / 28;                                  // 回彈第一次回到原位：尾端敲到石頭的瞬間
+  const wy = heightAt(x, z) + 0.3;                               // 聲音用世界座標
+  let pu = 0;
   onTick(t => {
     if (reduceMotion) { pivot.rotation.z = REST; return; }
     const u = t % CYCLE;
+    if (pu < 7.3 && u >= 7.3) cue('pour', sx + 0.36, wy - 0.1, sz);
+    if (pu < KNOCK && u >= KNOCK) cue('knock', sx - 0.34, wy - 0.15, sz);
+    pu = u;
     let a;
     if (u < 7.1) a = REST - (u / 7.1) * 0.1;
     else if (u < 7.35) a = REST - 0.1 + (TIP - REST + 0.1) * ((u - 7.1) / 0.25);
