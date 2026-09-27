@@ -2,6 +2,8 @@
 
 用 three.js 手工建模的日式夜景微縮場景集。所有模型、貼圖和動畫都由程式產生，沒有外部模型檔；也不需要建置步驟或安裝套件，開一個本機伺服器就能看。
 
+**線上版：https://wkai2573.github.io/3d-miniature-scenes/**
+
 | 雨夜のことりマート | 秋夜の紅葉屋 |
 |---|---|
 | ![雨夜のことりマート](assets/thumbs/konbini.jpg) | ![秋夜の紅葉屋](assets/thumbs/ryokan.jpg) |
@@ -37,6 +39,14 @@ $env:PORT=8080; npm start      # PowerShell
 
 > 不能直接雙擊 HTML 檔開啟。瀏覽器不允許從 `file://` 載入 ES 模組，畫面會顯示錯誤提示。
 
+## 部署
+
+推送到 `main` 時，GitHub Actions（[deploy.yml](.github/workflows/deploy.yml)）會自動把網站部署到 GitHub Pages，大約一分鐘後生效。也可以在 repo 的 Actions 頁面手動執行「部署到 GitHub Pages」。
+
+- 只會上傳 `index.html`、`ryokan.html`、`css/`、`src/`、`assets/`；`server.mjs`、`package.json` 和 README 不會出現在網站上。
+- 所有路徑都是相對路徑，所以網站放在 `/3d-miniature-scenes/` 子路徑下也能正常運作。新增檔案時請不要用 `/` 開頭的絕對路徑。
+- 新增場景的頁面或資料夾，如果不在上面列出的位置，要一併加進 workflow 的「整理網站檔案」步驟。
+
 ## 操作
 
 | 動作 | 效果 |
@@ -58,6 +68,7 @@ $env:PORT=8080; npm start      # PowerShell
 index.html              雨夜のことりマート（預設頁）
 ryokan.html             秋夜の紅葉屋
 server.mjs              零相依的本機靜態伺服器
+.github/workflows/      推送 main 時自動部署到 GitHub Pages
 css/
   style.css             畫布、載入提示、錯誤訊息
   menu.css              場景選單與轉場布幕

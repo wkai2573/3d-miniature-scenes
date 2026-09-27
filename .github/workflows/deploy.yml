@@ -1,0 +1,42 @@
+# 推送到 main 時自動部署到 GitHub Pages
+# 第一次使用前，要到 repo 的 Settings → Pages，把 Source 設為「GitHub Actions」
+name: 部署到 GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:          # 也可以在 Actions 頁面手動執行
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時只跑一個部署；正在進行的部署不取消，讓它跑完
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # 只放網頁需要的檔案；server.mjs、package.json、README 不上線
+      - name: 整理網站檔案
+        run: |
+          mkdir _site
+          cp -r index.html ryokan.html css src assets _site/
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v5
