@@ -1,18 +1,21 @@
 // 環境音：錄音循環（雨聲、樹葉沙沙聲、水聲…）加上跟畫面同步的合成音效（滴水、自動門、鹿威し…）
 // 瀏覽器規定要等使用者互動（點擊、按鍵、拖曳）後才能出聲，所以第一次互動時才建立 AudioContext。
-// 開關偏好存在 localStorage，兩個場景共用；選單的聲音按鈕用 sound:toggle / sound:state 事件和這裡溝通。
+// 開關與音量存在 localStorage，兩個場景共用。聲音按鈕（src/ui/sound.js）用事件和這裡溝通：
+//   sound:toggle（S 鍵）、sound:set（開關，detail 是 true/false）、sound:volume（音量，detail 是 0–100）→ 這裡
+//   sound:state（detail 是 { state: off | wait | on, volume }）→ 按鈕
 import * as THREE from 'three';
 import { onTick } from './context.js';
 import { camera } from './renderer.js';
 
 const KEY = 'scene-sound';          // localStorage：'on' | 'off'，預設開
+const VKEY = 'scene-sound-volume';  // localStorage：音量百分比，預設 80
 const LIVE = 'scene-sound-live';    // sessionStorage：換場景前正在播放，下一頁試著直接接上
-const LEVEL = 0.85;                 // 整體音量
 
 const get = (s, k) => { try { return s.getItem(k); } catch { return null; } };
 const put = (s, k, v) => { try { v == null ? s.removeItem(k) : s.setItem(k, v); } catch { /* 無法記錄就算了 */ } };
 
 let want = get(localStorage, KEY) !== 'off';
+let vol = clampVol(parseInt(get(localStorage, VKEY) ?? '80', 10));
 let ctx = null, master = null, bus = null, verbIn = null;
 let scene = null;                  // { files, build }
 let phase = 'idle';                // idle → loading → on
@@ -70,7 +73,7 @@ function start() {
   if (!ctx && !create()) return;
   if (ctx.state !== 'running') ctx.resume().catch(() => {});
   if (scene && phase === 'idle') load();
-  else if (phase === 'on') fade(LEVEL, 1.2);
+  else if (phase === 'on') fade(level(), 1.2);
   emit();
 }
 
@@ -84,7 +87,7 @@ async function load() {
     }));
     scene.build(A, bufs);
     phase = 'on';
-    if (want) fade(LEVEL, 2.5);
+    if (want) fade(level(), 2.5);
   } catch (e) {
     console.warn('環境音載入失敗：', e);
     phase = 'idle';
@@ -92,6 +95,10 @@ async function load() {
   }
   emit();
 }
+
+// 音量百分比 → 增益：平方曲線，拖動時聽起來比較均勻；80% 是調好的音量，100% 約再大 4 dB
+function level() { return 1.35 * (vol / 100) ** 2; }
+function clampVol(v) { return Number.isFinite(v) ? Math.min(100, Math.max(0, Math.round(v))) : 80; }
 
 function fade(v, sec) {
   const g = master.gain, t = ctx.currentTime;
@@ -113,18 +120,25 @@ function setWant(v) {
   emit();
 }
 
-// 給選單按鈕：off（關）、wait（開，但還在等互動或下載）、on（播放中）
+// 給聲音按鈕：off（關）、wait（開，但還在等互動或下載）、on（播放中）
 function emit() {
   const live = want && phase === 'on' && ctx?.state === 'running';
-  dispatchEvent(new CustomEvent('sound:state', { detail: { state: !want ? 'off' : live ? 'on' : 'wait' } }));
+  dispatchEvent(new CustomEvent('sound:state', { detail: { state: !want ? 'off' : live ? 'on' : 'wait', volume: vol } }));
 }
 
 addEventListener('sound:toggle', () => {
   if (want && !(phase === 'on' && ctx?.state === 'running')) start();   // 開著但還沒出聲：按一下就開始
   else setWant(!want);
 });
+addEventListener('sound:set', e => setWant(!!e.detail));
+addEventListener('sound:volume', e => {
+  vol = clampVol(e.detail);
+  put(localStorage, VKEY, String(vol));
+  if (ctx && want && phase === 'on') fade(level(), 0.08);
+  emit();
+});
 
-// 任何互動都能讓聲音開始（聲音按鈕本身除外，交給 sound:toggle 處理）
+// 任何互動都能讓聲音開始（聲音按鈕與面板除外，交給上面的事件處理）
 const kick = e => {
   if (!want || document.hidden || e.target?.closest?.('.snd')) return;
   if (!ctx || ctx.state !== 'running' || phase === 'idle') start();
@@ -144,7 +158,7 @@ addEventListener('scene:leave', () => {
   fade(0, 0.5);
   put(sessionStorage, LIVE, '1');
 });
-addEventListener('pageshow', e => { if (e.persisted && ctx && want && phase === 'on') fade(LEVEL, 1); });
+addEventListener('pageshow', e => { if (e.persisted && ctx && want && phase === 'on') fade(level(), 1); });
 if (get(sessionStorage, LIVE)) {
   put(sessionStorage, LIVE, null);
   if (want) addEventListener('scene:ready', () => start(), { once: true });
