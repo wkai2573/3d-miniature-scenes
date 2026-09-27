@@ -1,9 +1,9 @@
 // 多處共用的小道具：空調室外機、腳踏車（ママチャリ）
 import * as THREE from 'three';
-import { PI, scene } from '../core/context.js';
-import { canvasTex } from '../lib/canvas.js';
-import { toon } from '../lib/materials.js';
-import { G, add, box, plane, rod, grp } from '../lib/geometry.js';
+import { PI, scene } from '../../engine/context.js';
+import { canvasTex } from '../../engine/canvas.js';
+import { toon } from '../../engine/materials.js';
+import { G, add, box, plane, rod, grp } from '../../engine/geometry.js';
 
 // ---- 室外機 ----
 let fanMat = null;

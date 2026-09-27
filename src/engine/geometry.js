@@ -1,7 +1,7 @@
 // 建模小工具：box / cyl 以「底部高度」定位，並自動加上描邊
 import * as THREE from 'three';
-import { scene } from '../core/context.js';
-import { M, outline } from './materials.js';
+import { scene } from './context.js';
+import { M, outline, outlineByDefault } from './materials.js';
 
 const geoCache = new Map();
 export const G = (key, make) => { let g = geoCache.get(key); if (!g) geoCache.set(key, g = make()); return g; };
@@ -13,7 +13,7 @@ export function add(mesh, o = {}) {
   if (o.rx) mesh.rotation.x = o.rx;
   if (o.ry) mesh.rotation.y = o.ry;
   if (o.rz) mesh.rotation.z = o.rz;
-  if (o.outline !== false && !mesh.material.transparent) outline(mesh, o.t ?? 0.02);
+  if ((o.outline ?? outlineByDefault()) && !mesh.material.transparent) outline(mesh, o.t ?? 0.02);
   (o.parent ?? scene).add(mesh);
   return mesh;
 }
@@ -89,4 +89,44 @@ export function hipRoof(W, D, H, mat, x, yb, z, o = {}) {
   const m = new THREE.Mesh(geo, M(mat));
   m.position.set(x, yb, z);
   return add(m, { cast: true, t: 0.035, ...o });
+}
+
+// 入母屋屋頂：下半部四坡（寄棟）、上半部兩坡（切妻）＋山牆三角、厚屋簷、屋脊與鬼瓦
+// W 沿本地 x（屋脊方向）、D 沿 z；hip = 寄棟部分占總高的比例
+// mats: { roof, gable, ridge }；UV 以公尺為單位做平面投影，方便套瓦片條紋貼圖
+export function irimoyaRoof(W, D, H, mats, x, yb, z, o = {}) {
+  const w = W / 2, d = D / 2, k = o.hip ?? 0.5, t = o.thick ?? 0.14;
+  const h1 = H * k, d1 = d * (1 - k), w1 = w - d * k;
+  const A = [-w, 0, d], B = [w, 0, d], C = [w1, h1, d1], Dp = [w1, H, 0], E = [-w1, H, 0], F = [-w1, h1, d1];
+  const Ab = [-w, 0, -d], Bb = [w, 0, -d], Cb = [w1, h1, -d1], Fb = [-w1, h1, -d1];
+  const L = [-w, -t, d], R = [w, -t, d], Lb = [-w, -t, -d], Rb = [w, -t, -d];
+  const roofTris = [
+    [A, B, C], [A, C, Dp], [A, Dp, E], [A, E, F],           // 前坡
+    [Bb, Ab, Fb], [Bb, Fb, E], [Bb, E, Dp], [Bb, Dp, Cb],    // 後坡
+    [B, Bb, Cb], [B, Cb, C], [Ab, A, F], [Ab, F, Fb],        // 兩端的寄棟斜面
+    [L, R, B], [L, B, A], [R, Rb, Bb], [R, Bb, B],           // 屋簷厚度
+    [Rb, Lb, Ab], [Rb, Ab, Bb], [Lb, L, A], [Lb, A, Ab],
+    [Lb, Rb, R], [Lb, R, L],                                 // 簷底
+  ];
+  const gableTris = [[C, Cb, Dp], [Fb, F, E]];
+  const build = tris => {
+    const pos = [], uv = [];
+    for (const tri of tris) {
+      const [p, q, r] = tri.map(v => new THREE.Vector3(...v));
+      const n = q.clone().sub(p).cross(r.clone().sub(p));
+      const alongX = Math.abs(n.z) >= Math.abs(n.x);
+      for (const v of [p, q, r]) { pos.push(v.x, v.y, v.z); uv.push(alongX ? v.x : v.z, v.y * 1.6 + (alongX ? 0 : 0.5)); }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.computeVertexNormals();
+    return g;
+  };
+  const g0 = grp(x, yb, z, o.ry ?? 0, o.parent ?? scene);
+  add(new THREE.Mesh(build(roofTris), M(mats.roof)), { parent: g0, cast: true });
+  add(new THREE.Mesh(build(gableTris), M(mats.gable)), { parent: g0, cast: true });
+  box(2 * w1 + 0.3, 0.16, 0.24, mats.ridge ?? mats.roof, 0, H - 0.04, 0, { parent: g0, cast: true });
+  for (const s of [-1, 1]) box(0.2, 0.32, 0.3, mats.ridge ?? mats.roof, s * (w1 + 0.14), H - 0.1, 0, { parent: g0 });
+  return g0;
 }

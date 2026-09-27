@@ -1,7 +1,7 @@
 // 帶雨痕的玻璃：靜止水珠 + 往下滑的水滴與水痕 + 邊緣反光
 import * as THREE from 'three';
-import { U, scene } from '../core/context.js';
-import { rng } from '../lib/random.js';
+import { U, scene } from '../../../engine/context.js';
+import { rng } from '../../../engine/random.js';
 
 export function glassMat(w, h) {
   return new THREE.ShaderMaterial({

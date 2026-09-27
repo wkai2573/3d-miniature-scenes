@@ -1,15 +1,16 @@
 // 便利商店外觀：牆體、玻璃、自動門、雨棚、招牌、立式燈箱、自販機等
 // 店面範圍 x -6 ~ 4、z -6 ~ 1，正面朝 +z，右側（x = 4）也有玻璃
 import * as THREE from 'three';
-import { PI, reduceMotion, onTick } from '../core/context.js';
-import { pLight } from '../core/lighting.js';
-import { rand, pick } from '../lib/random.js';
-import { canvasTex, rr, txt, drawBird, FONT } from '../lib/canvas.js';
-import { toon, glow } from '../lib/materials.js';
-import { G, add, box, cyl, plane, rod, grp } from '../lib/geometry.js';
-import { glassPane } from '../shaders/glass.js';
+import { PI, reduceMotion, onTick } from '../../engine/context.js';
+import { pLight } from '../../engine/lights.js';
+import { rand, pick } from '../../engine/random.js';
+import { canvasTex, rr, txt, FONT } from '../../engine/canvas.js';
+import { drawBird } from './brand.js';
+import { toon, glow } from '../../engine/materials.js';
+import { G, add, box, cyl, plane, rod, grp } from '../../engine/geometry.js';
+import { glassPane } from './shaders/glass.js';
 import { acUnit } from './props.js';
-import { WALL, FRAME, KICK, CANOPY, CORAL, MUSTARD, TEAL, CREAM } from '../palette.js';
+import { WALL, FRAME, KICK, CANOPY, CORAL, MUSTARD, TEAL, CREAM } from './palette.js';
 
 export function buildStoreExterior() {
   // ---- 地板 ----

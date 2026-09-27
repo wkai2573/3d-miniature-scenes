@@ -2,13 +2,13 @@
 // 座標：1 單位 = 1 公尺；底座範圍 x、z 皆為 -14 ~ 14；+z 朝大馬路（相機所在側）
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { scene, U, DPR, PI } from '../core/context.js';
-import { onResize } from '../core/renderer.js';
-import { rng, rand, pick } from '../lib/random.js';
-import { canvasTex, txt } from '../lib/canvas.js';
-import { toon } from '../lib/materials.js';
-import { box } from '../lib/geometry.js';
-import { WetShader } from '../shaders/wetGround.js';
+import { scene, U, DPR, PI } from '../../engine/context.js';
+import { onResize } from '../../engine/renderer.js';
+import { rng, rand, pick } from '../../engine/random.js';
+import { canvasTex, txt } from '../../engine/canvas.js';
+import { toon } from '../../engine/materials.js';
+import { box } from '../../engine/geometry.js';
+import { WetShader } from './shaders/wetGround.js';
 
 export const HALF = 14;
 

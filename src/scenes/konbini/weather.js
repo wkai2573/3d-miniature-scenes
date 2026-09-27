@@ -1,10 +1,10 @@
 // 雨夜效果：雨絲、地面水花、屋簷與走廊滴水
 // 這些都在圖層 1（不進地面反射）
 import * as THREE from 'three';
-import { scene, U, DPR, PI, reduceMotion, onTick } from '../core/context.js';
-import { rng, rand, pick } from '../lib/random.js';
-import { glow } from '../lib/materials.js';
-import { tmp } from '../lib/geometry.js';
+import { scene, U, DPR, PI, reduceMotion, onTick } from '../../engine/context.js';
+import { rng, rand, pick } from '../../engine/random.js';
+import { glow } from '../../engine/materials.js';
+import { tmp } from '../../engine/geometry.js';
 
 export function buildWeather({ lampPositions }) {
   buildRain(lampPositions);

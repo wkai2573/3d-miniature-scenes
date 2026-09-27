@@ -1,9 +1,9 @@
 // 紅綠燈：路口的車用／行人號誌依 32 秒週期輪替，遠處一盞夜間閃黃燈
 import * as THREE from 'three';
-import { PI, onTick } from '../core/context.js';
-import { canvasTex } from '../lib/canvas.js';
-import { toon } from '../lib/materials.js';
-import { G, box, cyl, plane, rod, grp } from '../lib/geometry.js';
+import { PI, onTick } from '../../engine/context.js';
+import { canvasTex } from '../../engine/canvas.js';
+import { toon } from '../../engine/materials.js';
+import { G, box, cyl, plane, rod, grp } from '../../engine/geometry.js';
 
 function sigMat(color, map = null) {
   const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(color), map });

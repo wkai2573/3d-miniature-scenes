@@ -1,13 +1,14 @@
 // 便利商店內部：冷藏櫃、便當飯糰區、貨架、收銀台、關東煮、咖啡機、菸架、雜誌架、冰櫃、後場
 // 店內物件都放在圖層 1（不進地面反射，省一次渲染）；發光的天花板燈與冷藏櫃背板留在圖層 0
 import * as THREE from 'three';
-import { scene, PI, onTick } from '../core/context.js';
-import { pLight } from '../core/lighting.js';
-import { rand, pick } from '../lib/random.js';
-import { canvasTex, rr, txt, drawBird } from '../lib/canvas.js';
-import { toon, glow, gradientMap } from '../lib/materials.js';
-import { box, cyl, plane, rod, grp, inst } from '../lib/geometry.js';
-import { FRAME, CORAL, MUSTARD, TEAL } from '../palette.js';
+import { scene, PI, onTick } from '../../engine/context.js';
+import { pLight } from '../../engine/lights.js';
+import { rand, pick } from '../../engine/random.js';
+import { canvasTex, rr, txt } from '../../engine/canvas.js';
+import { drawBird } from './brand.js';
+import { toon, glow, gradientMap } from '../../engine/materials.js';
+import { box, cyl, plane, rod, grp, inst } from '../../engine/geometry.js';
+import { FRAME, CORAL, MUSTARD, TEAL } from './palette.js';
 
 const FL = 0.12;   // 店內地板高度
 const SNACK = ['#e94f37', '#f6ae2d', '#2e86ab', '#7dc95e', '#f25f5c', '#ffe066', '#9b5de5', '#f15bb5', '#00bbf9', '#ff9f1c', '#e4572e', '#4ecdc4', '#fdfcdc'];

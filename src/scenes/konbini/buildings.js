@@ -1,10 +1,10 @@
 // 周邊建築：公寓「月見荘」、後方民宅、側街對面的圍牆與植栽
 import * as THREE from 'three';
-import { PI } from '../core/context.js';
-import { rand, pick } from '../lib/random.js';
-import { canvasTex, txt } from '../lib/canvas.js';
-import { toon, glow } from '../lib/materials.js';
-import { G, add, box, cyl, plane, grp, hipRoof } from '../lib/geometry.js';
+import { PI } from '../../engine/context.js';
+import { rand, pick } from '../../engine/random.js';
+import { canvasTex, txt } from '../../engine/canvas.js';
+import { toon, glow } from '../../engine/materials.js';
+import { G, add, box, cyl, plane, grp, hipRoof } from '../../engine/geometry.js';
 import { acUnit, bicycle } from './props.js';
 
 export function buildBuildings() {
