@@ -10,7 +10,12 @@ import { buildInn } from './inn.js';
 import { buildOnsen } from './onsen.js';
 import { buildGarden } from './garden.js';
 import { buildFlora } from './flora.js';
+import { buildGroundcover } from './groundcover.js';
+import { startWind } from './wind.js';
+import { buildFallingLeaves } from './fallingLeaves.js';
 import { buildAtmosphere } from './atmosphere.js';
+import { onLevel } from './shapes.js';
+import { LV } from './layout.js';
 
 // 貼圖上會畫到的日文字元（新增文字時請一併加入）
 const GLYPHS = 'ゆ湯紅葉屋男女';
@@ -19,11 +24,14 @@ setupRyokan();
 await loadFonts(GLYPHS);
 
 buildIsland();
-buildInn();
-buildOnsen();
+onLevel(LV.up, buildInn);        // 主屋、湯屋、溫泉在上段台地
+onLevel(LV.up, buildOnsen);
 buildGarden();
 buildFlora();
+buildGroundcover();
+buildFallingLeaves();
 buildAtmosphere();
+startWind();
 
 staticBatch(scene);
 

@@ -1,7 +1,7 @@
 // 紅葉屋的調色盤：紫藍夜色 × 琥珀燈火 × 楓紅
 export const C = {
-  sky: ['#1a1430', '#382c58', '#6a5684'],
-  fog: 0x3a2f55,
+  sky: ['#141029', '#2d2451', '#5a4b78'],
+  fog: 0x342a50,
 
   tile: '#3e4459', tileDark: '#2d3243', ridge: '#262a38',
   wood: '#6b4a36', woodLight: '#8a6446', woodDark: '#45301f',

@@ -39,12 +39,26 @@ const NaNGuardShader = {
     }`,
 };
 
+// 暗角：畫面四周輕輕壓暗，把視線收回中央
+const VignetteShader = {
+  uniforms: { tDiffuse: { value: null }, amount: { value: 0.3 } },
+  vertexShader: NaNGuardShader.vertexShader,
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float amount; varying vec2 vUv;
+    void main() {
+      vec4 c = texture2D(tDiffuse, vUv);
+      float r = length((vUv - 0.5) * vec2(1.0, 0.82)) * 1.45;
+      c.rgb *= 1.0 - amount * smoothstep(0.35, 1.0, r);
+      gl_FragColor = c;
+    }`,
+};
+
 /**
  * o.view:  { fov, target:[x,y,z], azimuth, elevation(度), frame:[需要的垂直寬度, 需要的水平寬度], min, max, maxPolar }
  * o.toneMapping / o.exposure
  * o.bloom: { strength, radius, threshold }
  * o.ao:    null 或 { radius, minDistance, maxDistance, samples } → SSAO（環境光遮蔽）
  * o.clamp: 平移範圍 { x:[a,b], y:[a,b], z:[a,b] }
+ * o.vignette: 暗角強度（0 ~ 1，省略則不加）
  */
 export function setupRenderer(o) {
   renderer.toneMapping = o.toneMapping ?? THREE.ACESFilmicToneMapping;
@@ -87,6 +101,7 @@ export function setupRenderer(o) {
     ao.kernelRadius = o.ao.radius ?? 0.5;
     ao.minDistance = o.ao.minDistance ?? 0.00004;
     ao.maxDistance = o.ao.maxDistance ?? 0.004;
+    ao.normalMaterial.side = THREE.DoubleSide;   // 雙面的葉片背面也要進法線階段
     // 原版只在法線階段隱藏 Points / Line；蒸氣、水面等透明物件也要排除，否則周圍會出現 AO 暈影
     const hideBase = ao.overrideVisibility.bind(ao);
     ao.overrideVisibility = () => {
@@ -101,6 +116,11 @@ export function setupRenderer(o) {
   const b = o.bloom ?? { strength: 0.5, radius: 0.55, threshold: 0.92 };
   composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), b.strength, b.radius, b.threshold));
   composer.addPass(new OutputPass());
+  if (o.vignette) {
+    const v = new ShaderPass(VignetteShader);
+    v.uniforms.amount.value = o.vignette;
+    composer.addPass(v);
+  }
   fxaa = new ShaderPass(FXAAShader);
   composer.addPass(fxaa);
   setFxaaSize();

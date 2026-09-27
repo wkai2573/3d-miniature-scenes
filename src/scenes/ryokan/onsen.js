@@ -7,13 +7,18 @@ import { soft, glow } from '../../engine/materials.js';
 import { box, cyl, plane, rod, grp } from '../../engine/geometry.js';
 import { rock, plankMat } from './shapes.js';
 import { waterMesh } from './water.js';
+import { W } from './wind.js';
 import { C } from './palette.js';
-import { ONSEN, DECK, LANTERNS } from './layout.js';
+import { LV, ONSEN, DECK, LANTERNS } from './layout.js';
 
 export function buildOnsen() {
   const { cx, cz, rx, rz } = ONSEN;
   const yukimi = LANTERNS.find(l => l[2] === 'yukimi');
-  scene.add(waterMesh({ cx, cz, rx, rz, y: 0.1, shallow: '#a8dcd8', deep: '#5aa5b0', lamp: [yukimi[0], yukimi[1]], lampColor: '#ffb070', rippleScale: 2.2 }));
+  // 乳白溫泉：倒影淡、起伏小；漣漪只從湯口落點擴散（這裡在 onLevel 裡建造，燈與湯口用世界座標）
+  scene.add(waterMesh({
+    ellipse: { cx, cz, rx, rz, depth: 0.5 }, y: 0.1, shallow: '#98cbc8', deep: '#4c93a0', shore: '#cfe6e0', sky: ['#8c7caa', '#3a3060'],
+    lamps: [[yukimi[0], LV.up + 0.72, yukimi[1]]], lampColor: '#ffb070', emitters: [[cx + rx - 0.47, cz - 0.54, 2.2, 0.8]], reflect: 0.55, calm: 0.5,
+  }));
 
   // ---- 圍池的岩石（靠平台那側留給木板）----
   const stones = [C.stone, C.stoneDark, C.stoneWarm, '#7a7680'];
@@ -52,8 +57,8 @@ export function buildOnsen() {
     for (const y of [0.35, h * 0.55, h - 0.1]) rod([x - 0.05, y, z0], [x - 0.05, y, z1], 0.035, C.bambooDark, { seg: 6 });
     for (let z = z0; z <= z1 + 1e-6; z += len / Math.max(1, Math.round(len / 1.6))) cyl(0.06, 0.06, h + 0.2, C.woodDark, x, 0, z, { seg: 8, cast: true });
   };
-  fence(11.4, -5.6, 0.8, 2.0);
-  fence(5.05, -3.3, -1.2, 1.6);
+  fence(cx + 3.4, cz - 4.0, cz + 2.2, 2.0);
+  fence(cx - 2.95, cz - 1.7, cz + 0.2, 1.6);
 
   // ---- 湯屋前的木平台、木桶、手桶、板凳 ----
   const deckW = DECK.x1 - DECK.x0, deckD = DECK.z1 - DECK.z0;
@@ -63,21 +68,23 @@ export function buildOnsen() {
     cyl(r + 0.01, r + 0.01, 0.03, C.woodDark, x, yb + h * 0.25, z, { seg: 14 });
     cyl(r + 0.01, r + 0.01, 0.03, C.woodDark, x, yb + h * 0.75, z, { seg: 14 });
   };
-  bucket(5.3, -4.0, 0.2, 0.18);
-  bucket(5.32, -4.0, 0.19, 0.17, 0.36);  // 疊放
-  bucket(5.85, -3.7, 0.16, 0.16);
-  const hand = grp(9.2, 0.18, -3.8);      // 手桶：有提把
+  const bx = DECK.x0 + 0.7, bz = DECK.z1 - 0.7;
+  bucket(bx, bz, 0.2, 0.18);
+  bucket(bx + 0.02, bz, 0.19, 0.17, 0.36);  // 疊放
+  bucket(bx + 0.55, bz + 0.3, 0.16, 0.16);
+  const hand = grp(DECK.x1 - 0.6, 0.18, DECK.z1 - 0.5);      // 手桶：有提把
   cyl(0.15, 0.13, 0.18, C.woodLight, 0, 0, 0, { parent: hand, seg: 14 });
   rod([-0.15, 0.1, 0], [-0.15, 0.3, 0], 0.015, C.woodDark, { parent: hand });
   rod([0.15, 0.1, 0], [0.15, 0.3, 0], 0.015, C.woodDark, { parent: hand });
   rod([-0.15, 0.3, 0], [0.15, 0.3, 0], 0.02, C.woodDark, { parent: hand });
-  box(0.4, 0.05, 0.26, C.woodLight, 8.5, 0.38, -3.9, { cast: true });   // 風呂椅子
-  for (const [dx, dz] of [[-0.16, -0.1], [0.16, -0.1], [-0.16, 0.1], [0.16, 0.1]]) box(0.04, 0.2, 0.04, C.woodDark, 8.5 + dx, 0.18, -3.9 + dz);
+  const sx = DECK.x1 - 1.3, sz = DECK.z1 - 0.6;
+  box(0.4, 0.05, 0.26, C.woodLight, sx, 0.38, sz, { cast: true });   // 風呂椅子
+  for (const [dx, dz] of [[-0.16, -0.1], [0.16, -0.1], [-0.16, 0.1], [0.16, 0.1]]) box(0.04, 0.2, 0.04, C.woodDark, sx + dx, 0.18, sz + dz);
 
   buildSteam();
 }
 
-// ---- 湯けむり：從水面升起、變大、飄散 ----
+// ---- 湯けむり：從水面慢慢升起、變大、飄散，陣風時被吹斜 ----
 function buildSteam() {
   const { cx, cz, rx, rz } = ONSEN;
   const tex = canvasTex(64, 64, (g, w) => {
@@ -91,12 +98,13 @@ function buildSteam() {
     s.layers.set(1);
     scene.add(s);
     const a = rand(0, PI * 2), d = Math.sqrt(rand(0, 1)) * 0.85;
-    puffs.push({ s, x: cx + Math.cos(a) * rx * d, z: cz + Math.sin(a) * rz * d, life: rand(4.5, 7), ph: rand(0, 1) });
+    puffs.push({ s, x: cx + Math.cos(a) * rx * d, z: cz + Math.sin(a) * rz * d, life: rand(6.5, 9.5), ph: rand(0, 1) });
   }
   onTick(t => {
+    const g = W.gust.value, d = W.dir.value, drift = 0.5 + 2.2 * g;
     for (const p of puffs) {
       const f = ((t / p.life) + p.ph) % 1;
-      p.s.position.set(p.x + Math.sin(f * 3 + p.ph * 9) * 0.25 + f * 0.6, 0.2 + f * 2.6, p.z + Math.cos(f * 2.3 + p.ph * 7) * 0.2);
+      p.s.position.set(p.x + Math.sin(f * 3 + p.ph * 9) * 0.25 + f * drift * d.x, 0.2 + f * (2.6 - g), p.z + Math.cos(f * 2.3 + p.ph * 7) * 0.2 + f * drift * d.y);
       p.s.scale.setScalar(0.5 + f * 1.9);
       p.s.material.opacity = Math.sin(f * PI) * 0.2;
     }

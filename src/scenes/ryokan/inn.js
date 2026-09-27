@@ -7,7 +7,10 @@ import { soft, glow } from '../../engine/materials.js';
 import { box, plane, rod, hipRoof, irimoyaRoof } from '../../engine/geometry.js';
 import { lightPool, roofMats, plankMat } from './shapes.js';
 import { C } from './palette.js';
-import { INN, ANNEX } from './layout.js';
+import { INN, ANNEX, GENKAN_X } from './layout.js';
+
+// 渡り廊下的 z（主屋右側的出入口也在這裡）
+const CORR_Z = INN.z1 - 2.5;
 
 // ---- 貼圖 ----
 function makeTextures() {
@@ -70,7 +73,7 @@ export function buildInn() {
   for (let i = 0; i <= 4; i++) box(0.18, 2.7, 0.18, C.woodDark, xr, B, INN.z0 + i * 1.25);
   box(0.16, 0.2, D + 0.1, C.wood, xr + 0.02, 2.6, cz);
   for (const i of [0, 3]) plane(1.07, 2.0, shojiMat, INN.x1 + 0.015, B + 1.08, INN.z0 + 0.625 + i * 1.25, { ry: PI / 2 });
-  plane(2.3, 2.05, glow('#ffffff', 0.9, { map: T.genkan }), INN.x1 + 0.015, B + 1.05, -6.0, { ry: PI / 2 });   // 通往連廊
+  plane(2.3, 2.05, glow('#ffffff', 0.9, { map: T.genkan }), INN.x1 + 0.015, B + 1.05, CORR_Z, { ry: PI / 2 });   // 通往連廊
 
   // ---- 緣側 ----
   box(W + 0.4, 0.12, 1.1, planks, cx, B - 0.12, INN.z1 + 0.55, { cast: true });
@@ -94,7 +97,7 @@ export function buildInn() {
   irimoyaRoof(w2 + 2.0, d2 + 2.5, 2.3, roofs, cx, 5.65, cz2, { hip: 0.42, thick: 0.18 });
 
   // ---- 玄關 ----
-  const gx = -2.5, gz = INN.z1;
+  const gx = GENKAN_X, gz = INN.z1;
   plane(2.3, 2.05, glow('#ffffff', 1.15, { map: T.genkan }), gx, B + 1.04, gz + 0.013);
   for (const x of [gx - 1.2, gx + 1.2]) box(0.2, 2.75, 0.2, C.woodDark, x, 0, gz + 1.25, { cast: true });
   box(2.8, 0.22, 0.24, C.wood, gx, 2.6, gz + 1.25);
@@ -135,7 +138,7 @@ export function buildInn() {
 
 // ---- 渡り廊下（主屋 → 湯屋）----
 function buildCorridor(roofs, planks) {
-  const x0 = INN.x1, x1 = ANNEX.x0, cx = (x0 + x1) / 2, z = -6.0;
+  const x0 = INN.x1, x1 = ANNEX.x0, cx = (x0 + x1) / 2, z = CORR_Z;
   box(x1 - x0 + 0.1, 0.12, 1.5, planks, cx, INN.base - 0.12, z, { cast: true });
   for (const x of [x0 + 0.15, x1 - 0.15]) for (const dz of [-0.68, 0.68]) box(0.14, 2.45, 0.14, C.woodDark, x, 0, z + dz, { cast: true });
   for (const dz of [-0.68, 0.68]) {

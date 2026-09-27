@@ -14,8 +14,9 @@ export function setupRyokan() {
     bloom: { strength: 0.6, radius: 0.6, threshold: 0.85 },
     // 網址加上 #noao 可關閉環境光遮蔽（較弱的顯示卡）
     ao: location.hash === '#noao' ? null : { radius: 0.55, minDistance: 0.00004, maxDistance: 0.004, samples: 24 },
-    view: { fov: 30, target: [0, 0.2, 0.5], azimuth: 24, elevation: 36, frame: [33, 35], min: 12, max: 160 },
-    clamp: { x: [-11, 11], y: [-3, 6], z: [-11, 11] },
+    view: { fov: 30, target: [0, 0.6, 0.2], azimuth: 24, elevation: 34, frame: [41, 43], min: 12, max: 210 },
+    clamp: { x: [-15, 15], y: [-3, 7], z: [-16, 16] },
+    vignette: 0.32,
   });
 
   scene.background = canvasTex(4, 512, (g, w, h) => {
@@ -23,14 +24,14 @@ export function setupRyokan() {
     gr.addColorStop(0, C.sky[0]); gr.addColorStop(0.55, C.sky[1]); gr.addColorStop(1, C.sky[2]);
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
   });
-  scene.fog = new THREE.Fog(C.fog, 70, 170);
+  scene.fog = new THREE.Fog(C.fog, 110, 240);
 
-  scene.add(new THREE.HemisphereLight(0x9a8fd6, 0x4a3636, 3.2));
-  const key = new THREE.DirectionalLight(0xc8baff, 1.6);
-  key.position.set(-14, 20, 8);
+  scene.add(new THREE.HemisphereLight(0x928ac4, 0x3e3434, 3.0));
+  const key = new THREE.DirectionalLight(0xc4bcf0, 1.5);
+  key.position.set(-20, 28, 12);
   key.castShadow = true;
-  key.shadow.mapSize.set(2048, 2048);
-  Object.assign(key.shadow.camera, { left: -17, right: 17, top: 17, bottom: -17, near: 1, far: 60 });
+  key.shadow.mapSize.set(3072, 3072);
+  Object.assign(key.shadow.camera, { left: -25, right: 25, top: 25, bottom: -25, near: 1, far: 80 });
   key.shadow.bias = -0.0005;
   key.shadow.normalBias = 0.04;
   scene.add(key, key.target);
