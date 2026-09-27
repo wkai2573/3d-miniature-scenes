@@ -1,8 +1,8 @@
 {
-  "name": "rainy-night-konbini",
+  "name": "3d-miniature-scenes",
   "private": true,
   "type": "module",
-  "description": "日式雨夜便利商店街角的三渲二微縮場景",
+  "description": "以 three.js 打造的日式夜景 3D 微縮場景集：雨夜便利商店與秋夜溫泉旅館，附場景切換選單",
   "scripts": {
     "start": "node server.mjs"
   }

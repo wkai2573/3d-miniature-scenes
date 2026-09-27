@@ -1,4 +1,4 @@
-// 全場共用的風：平時是微風，每隔 12 ~ 20 秒吹來一陣風（1 秒增強、維持 2 秒、約 3 秒減弱）
+// 全場共用的風：平時是微風，開場 9 秒後吹來第一陣風，之後每隔 14 ~ 22 秒一陣（1.2 秒增強、維持 2 秒、約 3.3 秒減弱）
 // windy() 材質：依頂點離錨點的高度（aSway）左右擺動，陣風時順風傾倒；有 aFlutter 的葉片另有葉尖顫動
 import * as THREE from 'three';
 import { U, reduceMotion, onTick } from '../../engine/context.js';

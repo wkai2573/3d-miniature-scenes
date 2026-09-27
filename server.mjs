@@ -28,4 +28,4 @@ http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] ?? 'application/octet-stream', 'Cache-Control': 'no-store' });
     res.end(data);
   });
-}).listen(PORT, () => console.log(`雨夜のことりマート → http://localhost:${PORT}`));
+}).listen(PORT, () => console.log(`3D 微縮場景 → http://localhost:${PORT}（紅葉屋：/ryokan.html）`));
