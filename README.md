@@ -28,10 +28,10 @@
 
 ## 執行
 
-需要 Node.js（建議 18 以上），以及能連到 `cdn.jsdelivr.net`（three.js）和 Google Fonts 的網路。
+需要 [Bun](https://bun.sh)（1.1 以上），以及能連到 `cdn.jsdelivr.net`（three.js）和 Google Fonts 的網路。
 
 ```sh
-npm start
+bun start
 ```
 
 然後用瀏覽器開啟：
@@ -39,13 +39,13 @@ npm start
 - 雨夜のことりマート：http://localhost:5173
 - 秋夜の紅葉屋：http://localhost:5173/ryokan.html
 
-不需要 `npm install`：伺服器是零相依的 [server.mjs](server.mjs)，three.js 由 import map 從 CDN 載入。
+不需要 `bun install`：伺服器是零相依的 [server.mjs](server.mjs)，three.js 由 import map 從 CDN 載入。
 
 要換連接埠時設定 `PORT`：
 
 ```sh
-PORT=8080 npm start            # macOS / Linux / Git Bash
-$env:PORT=8080; npm start      # PowerShell
+PORT=8080 bun start            # macOS / Linux / Git Bash
+$env:PORT=8080; bun start      # PowerShell
 ```
 
 > 不能直接雙擊 HTML 檔開啟。瀏覽器不允許從 `file://` 載入 ES 模組，畫面會顯示錯誤提示。
@@ -81,7 +81,7 @@ $env:PORT=8080; npm start      # PowerShell
 ```
 index.html              雨夜のことりマート（預設頁）
 ryokan.html             秋夜の紅葉屋
-server.mjs              零相依的本機靜態伺服器
+server.mjs              零相依的本機靜態伺服器（Bun）
 .github/workflows/      推送 main 時自動部署到 GitHub Pages
 css/
   style.css             畫布、載入提示、錯誤訊息
@@ -143,6 +143,6 @@ src/
 
 需要支援 WebGL 的桌面版 Chrome、Edge 或 Firefox。畫面一片黑或出現錯誤訊息時，先確認：
 
-- 是用 `npm start` 開的 `http://localhost`，不是 `file://`。
+- 是用 `bun start` 開的 `http://localhost`，不是 `file://`。
 - 網路能連到 `cdn.jsdelivr.net`。
 - 瀏覽器沒有停用硬體加速（WebGL）。

@@ -4,6 +4,6 @@
   "type": "module",
   "description": "以 three.js 打造的日式夜景 3D 微縮場景集：雨夜便利商店與秋夜溫泉旅館，附場景切換選單",
   "scripts": {
-    "start": "node server.mjs"
+    "start": "bun server.mjs"
   }
 }
