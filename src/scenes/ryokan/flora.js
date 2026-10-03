@@ -1,9 +1,9 @@
 // 樹木：楓（五裂葉的葉團）、杉（鋸齒層錐，沿後山成群錯落）、黑松（雲形修剪的松針團）、竹林（叢生、彎梢、下垂的竹葉）
 import * as THREE from 'three';
 import { scene, PI } from '../../engine/context.js';
-import { rng, rand, pick } from '../../engine/random.js';
+import { rng, rand, pick, withSeed } from '../../engine/random.js';
 import { soft } from '../../engine/materials.js';
-import { rod, cyl } from '../../engine/geometry.js';
+import { rod, cyl, add, G } from '../../engine/geometry.js';
 import { windy } from './wind.js';
 import { bakeLeaves, leafCloud, coreBlob, randDir } from './foliage.js';
 import { mapleLeafGeo, lanceLeafGeo, needleTuftGeo } from './leaves.js';
@@ -26,6 +26,7 @@ const mats = {
   core: () => windy('#ffffff', { vc: true, amp: 0.016 }),
   needle: () => windy('#ffffff', { vc: true, leaf: true, amp: 0.01, flutter: 0.006 }),
   cedar: () => windy('#ffffff', { vc: true, flat: true, amp: 0.007 }),
+  pineMass: () => windy('#ffffff', { vc: true, flat: true, amp: 0.01 }),
   culm: () => windy('#ffffff', { vc: true, amp: 0.013 }),
   bambooLeaf: () => windy('#ffffff', { vc: true, leaf: true, amp: 0.013, flutter: 0.02 }),
 };
@@ -33,8 +34,8 @@ const mats = {
 export function buildFlora() {
   for (const [x, z, s, ci] of MAPLES) maple(x, z, s, ci);
   cedars();
-  blackPine(MOUND.x + 0.3, MOUND.z - 0.2, 1.05, [0.47, -0.88]);
-  blackPine(-12.4, 14.9, 0.8, [0.8, -0.3]);
+  blackPine(MOUND.x + 0.3, MOUND.z - 0.2, 1.05, [0.47, -0.88], 5101);
+  blackPine(-12.4, 14.9, 0.8, [0.8, -0.3], 5102);
   bamboo();
 }
 
@@ -129,30 +130,99 @@ function cedars() {
   scene.add(m);
 }
 
-// ---- 黑松：S 形扭曲的樹幹往池面探出，水平伸出的枝端是扁平的雲形松針團 ----
-function blackPine(x, z, s, lean) {
-  const y0 = heightAt(x, z), bark = soft('#3b302b');
-  const [lx, lz] = lean, side = [-lz, lx];
-  const P = [[x, y0 - 0.2, z]];
-  const steps = [[0.9, 0.3, 0.15], [0.8, 0.65, -0.25], [0.6, 0.55, 0.3], [0.5, 0.25, -0.1]];
-  for (const [u, l, sd] of steps) { const q = P[P.length - 1]; P.push([q[0] + (lx * l + side[0] * sd) * s, q[1] + u * s, q[2] + (lz * l + side[1] * sd) * s]); }
-  P.forEach((q, i) => { if (i) rod(P[i - 1], q, (0.2 - i * 0.03) * s, bark, { seg: 7, cast: true }); });
-  const pads = [];
-  const addPad = (q, a, len, r) => {
-    const end = [q[0] + Math.cos(a) * len * s, q[1] + rand(-0.1, 0.15) * s, q[2] + Math.sin(a) * len * s];
-    rod(q, end, 0.06 * s, bark, { seg: 5, cast: true });
-    pads.push({ c: [end[0], end[1] + 0.12 * s, end[2]], r: [r * s * rand(0.9, 1.1), r * s * 0.36, r * s * rand(0.75, 0.95)] });
-  };
-  const la = Math.atan2(lz, lx);
-  addPad(P[1], la + 1.4, 1.2, 0.8); addPad(P[2], la - 1.2, 1.3, 0.85); addPad(P[2], la + 0.3, 1.5, 0.9);
-  addPad(P[3], la + 1.9, 1.0, 0.7); addPad(P[3], la - 0.5, 1.1, 0.75);
-  pads.push({ c: [P[4][0], P[4][1] + 0.2 * s, P[4][2]], r: [0.75 * s, 0.32 * s, 0.7 * s] });
-  for (const p of pads) {
-    p.n = Math.round(160 * p.r[0] * p.r[2] / (s * s) * s * s + 40);
-    p.base = y0; p.pal = ['#1e3328', '#557a44'];
-    coreBlob(p.c, [p.r[0] * 0.78, p.r[1] * 0.62, p.r[2] * 0.78], '#132019', y0, mats.core());
+// ---- 黑松：S 形扭曲的樹幹往池面探出；水平伸出的枝先微微下垂、枝端再上揚，托著一層層雲形修剪的松針團 ----
+// 每個松針團由中央一團與外圍一圈小圓團組成，輪廓像雲；圓團是帶尖角的多面體量體（pineMass），表面再刷上一層短松針
+// 用自己的一條亂數（withSeed），調整松樹不會打亂竹林與地被的擺放
+function blackPine(x, z, s, lean, seed) {
+  withSeed(seed, () => {
+    const y0 = heightAt(x, z), V = a => new THREE.Vector3(...a);
+    const [lx, lz] = lean, side = [-lz, lx];
+    const P = [[x, y0 - 0.2, z]];
+    const steps = [[0.9, 0.3, 0.15], [0.8, 0.65, -0.25], [0.6, 0.55, 0.3], [0.5, 0.25, -0.1]];
+    for (const [u, l, sd] of steps) { const q = P[P.length - 1]; P.push([q[0] + (lx * l + side[0] * sd) * s, q[1] + u * s, q[2] + (lz * l + side[1] * sd) * s]); }
+    limb(P.map(V), 0.21 * s, 0.07 * s, { seg: 28, radial: 9, flare: 0.8 });
+
+    const pads = [];
+    const addPad = (q, a, len, r) => {
+      const dx = Math.cos(a) * len * s, dz = Math.sin(a) * len * s, rise = rand(-0.1, 0.15) * s;
+      const at = (f, dy) => V([q[0] + dx * f, q[1] + rise * f + dy * s, q[2] + dz * f]);
+      const end = at(1, 0);
+      limb([V(q), at(0.4, -0.07), at(0.75, -0.06), end], 0.075 * s, 0.03 * s, { seg: 12, radial: 6 });
+      pads.push({ end, c: [end.x, end.y + 0.1 * s, end.z], R: r * s, m: r >= 0.8 ? 6 : 5 });
+    };
+    const la = Math.atan2(lz, lx);
+    addPad(P[1], la + 1.4, 1.2, 0.8); addPad(P[2], la - 1.2, 1.3, 0.85); addPad(P[2], la + 0.3, 1.5, 0.9);
+    addPad(P[3], la + 1.9, 1.0, 0.7); addPad(P[3], la - 0.5, 1.1, 0.75);
+    pads.push({ end: V(P[4]), c: [P[4][0], P[4][1] + 0.2 * s, P[4][2]], R: 0.72 * s, m: 5 });
+
+    const clumps = [];
+    for (const { end, c: [cx, cy, cz], R, m } of pads) {
+      const ex = rand(0.95, 1.1), ez = rand(0.8, 0.95), a0 = rand(0, PI * 2);
+      clumps.push({ c: [cx, cy + 0.07 * s, cz], r: [0.5 * R * ex, 0.3 * R, 0.5 * R * ez] });
+      for (let i = 0; i < m; i++) {
+        const a = a0 + i / m * PI * 2 + rand(-0.25, 0.25), d = R * rand(0.48, 0.6), rr = R * rand(0.36, 0.44);
+        const c = [cx + Math.cos(a) * d * ex, cy + rand(-0.04, 0.03) * s, cz + Math.sin(a) * d * ez];
+        clumps.push({ c, r: [rr, rr * rand(0.62, 0.72), rr] });
+        limb([end, V([c[0], c[1] - rr * 0.35, c[2]])], 0.026 * s, 0.012 * s, { seg: 2, radial: 5 });   // 撐著小圓團的細枝
+      }
+    }
+    for (const cl of clumps) { cl.n = Math.round(160 * cl.r[0] * cl.r[2]) + 8; cl.base = y0; cl.pal = ['#15291d', '#365e3b']; }
+    pineMass(clumps, y0);
+    leafCloud(clumps, { geo: needleTuftGeo(), mat: mats.needle(), size: [0.15, 0.22], inner: 0, nb: 0.8, upBias: 0.6, droop: 0 });
+  });
+}
+
+// 松針團的量體：壓扁、底部削平的多面體，部分頂點往外推出尖角（和杉的鋸齒層同一種低多邊形風格），平面著色、上亮下暗
+function pineMass(clumps, base) {
+  const src = G('pineIco', () => new THREE.IcosahedronGeometry(1, 2)).attributes.position;
+  const pos = [], col = [], sway = [], d = new THREE.Vector3(), cc = new THREE.Color();
+  const lo = new THREE.Color('#0b1711'), mid = new THREE.Color('#172f22'), hi = new THREE.Color('#2c5236');
+  for (const { c, r } of clumps) {
+    const seed = rand(0, 100);
+    for (let i = 0; i < src.count; i++) {
+      d.fromBufferAttribute(src, i);
+      const h = hash2(Math.round(d.x * 997) + seed, Math.round(d.y * 991) * 7 + Math.round(d.z * 983));   // 相鄰三角形共用的頂點算出同一個值
+      const k = 1 + 0.45 * h * h * h, t = 0.5 + 0.5 * d.y;
+      const y = (d.y < 0 ? d.y * 0.45 : d.y) * k;                  // 底部削平
+      const p = [c[0] + d.x * k * r[0], c[1] + y * r[1], c[2] + d.z * k * r[2]];
+      pos.push(...p);
+      (t < 0.5 ? cc.lerpColors(lo, mid, t * 2) : cc.lerpColors(mid, hi, t * 2 - 1)).multiplyScalar(0.85 + 0.35 * h);   // 尖角受光較亮
+      col.push(cc.r, cc.g, cc.b);
+      sway.push(Math.max(0, p[1] - base));
+    }
   }
-  leafCloud(pads, { geo: needleTuftGeo(), mat: mats.needle(), size: [0.3, 0.42], inner: 0.06, nb: 0.78, upBias: 1.8, droop: 0 });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setAttribute('aSway', new THREE.Float32BufferAttribute(sway, 1));
+  g.computeVertexNormals();
+  const m = new THREE.Mesh(g, mats.pineMass());
+  m.castShadow = true; m.receiveShadow = true;
+  scene.add(m);
+}
+
+// 沿著控制點的平滑枝幹：由粗漸細（flare 讓根部張開），頂點色畫出一塊塊深淺不同的龜甲狀樹皮
+const BARK = [new THREE.Color('#1f1a17'), new THREE.Color('#6a5b50')];
+const hash2 = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
+function limb(pts, r0, r1, o = {}) {
+  const curve = new THREE.CatmullRomCurve3(pts), n = o.seg ?? 12, rs = o.radial ?? 6;
+  const g = new THREE.TubeGeometry(curve, n, 1, rs, false);
+  const p = g.attributes.position, col = new Float32Array(p.count * 3);
+  const c = new THREE.Vector3(), v = new THREE.Vector3(), cc = new THREE.Color(), len = curve.getLength(), seed = rand(0, 100);
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, r = (r0 + (r1 - r0) * t) * (1 + (o.flare ?? 0) * Math.pow(1 - t, 6));
+    curve.getPointAt(t, c);                                     // TubeGeometry 的每一圈就是以這個點為圓心
+    for (let j = 0; j <= rs; j++) {
+      const k = i * (rs + 1) + j;
+      v.fromBufferAttribute(p, k).sub(c).multiplyScalar(r).add(c);
+      p.setXYZ(k, v.x, v.y, v.z);
+      const plate = hash2(Math.floor(t * len / 0.16) + seed, j % rs);   // 沿長度每 16 公分、繞一圈分成幾塊
+      cc.lerpColors(BARK[0], BARK[1], (0.15 + 0.85 * plate * plate) * (0.8 + 0.2 * t));
+      col.set([cc.r, cc.g, cc.b], k * 3);
+    }
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return add(new THREE.Mesh(g, soft('#ffffff', { vc: true })), { cast: true, t: 0.01 });
 }
 
 // ---- 竹林：幾個叢生群落；竹稈分三段、越往上傾斜越多（竹梢彎垂），竹節、成束下垂的細長竹葉、竹筍、倒竹 ----

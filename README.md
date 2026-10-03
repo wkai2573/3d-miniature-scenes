@@ -127,7 +127,7 @@ src/
 | [canvas.js](src/engine/canvas.js) | Canvas 貼圖與日文字型載入 |
 | [lights.js](src/engine/lights.js) | 物理單位的點光源 |
 | [noise.js](src/engine/noise.js) | 3D value noise，用在岩石表面、地形起伏和落葉的旋渦氣流 |
-| [random.js](src/engine/random.js) | 固定種子的亂數，每次打開的場景都一樣 |
+| [random.js](src/engine/random.js) | 固定種子的亂數，每次打開的場景都一樣；`withSeed()` 讓自成一格的物件用自己的一條亂數，修改它不會打亂其他物件的擺放 |
 | [audio.js](src/engine/audio.js) | 環境音：場景用 `ambience()` 註冊錄音與合成音效，畫面上的事件用 `cue()` 發出聲音 |
 | [env.js](src/engine/env.js) | 時間與天氣的狀態：場景用 `initEnv()` 設定開場；雨量、雪量、濕度、積雪的漸變；`nightGlow()`、`nightLight()` 讓燈天亮就熄 |
 | [sky.js](src/engine/sky.js) | 天色：依太陽高度在四組調色盤（夜、藍調時刻、日出日落、白天）之間內插，設定背景、霧、環境光、主光、曝光與泛光；太陽、月亮與星星 |

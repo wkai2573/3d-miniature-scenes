@@ -69,7 +69,7 @@ function tuft(n, seg, w, tilt, curve, twist = 0.35) {
 }
 export const grassTuftGeo = () => G('tuftGrass', () => tuft(8, 2, 0.035, [0.15, 0.7], 0.9));
 export const susukiGeo = () => G('tuftSusuki', () => tuft(14, 4, 0.022, [0.1, 0.55], 1.3, 0.2));
-export const needleTuftGeo = () => G('tuftNeedle', () => tuft(8, 1, 0.02, [0.35, 0.9], 0.2));
+export const needleTuftGeo = () => G('tuftNeedle', () => tuft(7, 1, 0.016, [0.1, 0.55], 0.12));   // 松針：細而直、聚成刷狀
 
 // 芒草穗：細長、往一側垂的羽狀穗
 export const plumeGeo = () => G('plume', () =>
