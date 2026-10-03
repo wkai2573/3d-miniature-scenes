@@ -1,8 +1,9 @@
 // 場景選單：左上角的按鈕展開場景卡片，選了別的場景就交給轉場布幕（src/ui/veil.js）換頁。
 // 鍵盤：M 開關選單、Esc 關閉、數字鍵直接切換、選單開著時上下鍵在卡片間移動。
-// 右上角的聲音按鈕在 sound.js，跟著選單一起出現。
+// 右上角的聲音按鈕在 sound.js、下方的時間與天氣面板在 env.js，都跟著選單一起出現。
 import { SCENES } from './scenes.js';
 import { initSound } from './sound.js';
+import { initEnv } from './env.js';
 
 const nav = document.getElementById('scene-menu');
 if (nav) initMenu(nav);
@@ -41,11 +42,12 @@ function initMenu(nav) {
           </a>
         </li>`).join('')}
       </ul>
-      <p class="sm-keys"><span><kbd>M</kbd> 開關選單</span><span><kbd>1</kbd>–<kbd>${SCENES.length}</kbd> 切換場景</span><span><kbd>S</kbd> 聲音</span><span><kbd>−</kbd><kbd>＋</kbd> 音量</span><span><kbd>Esc</kbd> 關閉</span></p>
+      <p class="sm-keys"><span><kbd>M</kbd> 開關選單</span><span><kbd>1</kbd>–<kbd>${SCENES.length}</kbd> 切換場景</span><span><kbd>S</kbd> 聲音</span><span><kbd>−</kbd><kbd>＋</kbd> 音量</span><span><kbd>W</kbd> 天氣</span><span><kbd>←</kbd><kbd>→</kbd> 時間</span><span><kbd>Esc</kbd> 關閉</span></p>
     </div>`;
 
 
   const sound = initSound(current);
+  const env = initEnv(current);
 
   const toggle = nav.querySelector('.sm-toggle');
   const panel = nav.querySelector('.sm-panel');
@@ -121,6 +123,7 @@ function initMenu(nav) {
     nav.classList.toggle('is-instant', instant);
     nav.classList.add('is-ready');
     sound.show(instant);
+    env.show(instant);
   };
   if (window.__veil?.active) show(true);
   else if (window.__sceneStarted) show(false);

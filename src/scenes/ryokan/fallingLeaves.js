@@ -5,6 +5,7 @@ import { scene, PI, reduceMotion, onTick } from '../../engine/context.js';
 import { rng, rand, pick } from '../../engine/random.js';
 import { noise3 } from '../../engine/noise.js';
 import { soft } from '../../engine/materials.js';
+import { ENV } from '../../engine/env.js';
 import { W } from './wind.js';
 import { CANOPY } from './flora.js';
 import { mapleLeafGeo } from './leaves.js';
@@ -53,8 +54,8 @@ export function buildFallingLeaves() {
   let acc = 0;
   onTick((t, dt) => {
     const gust = W.gust.value, wd = W.dir.value;
-    // 生成：平時每秒約 7 片，陣風時大增；閒置的葉子不夠時，陣風把地上的葉子捲起來
-    acc += dt * (7 + 120 * gust);
+    // 生成：平時每秒約 7 片（雨雪天少一些），陣風時大增；閒置的葉子不夠時，陣風把地上的葉子捲起來
+    acc += dt * (7 * (1 - 0.6 * Math.max(ENV.rain, ENV.snow)) + 120 * gust);
     while (acc >= 1) {
       acc -= 1;
       const idle = L.find(l => l.st === IDLE);

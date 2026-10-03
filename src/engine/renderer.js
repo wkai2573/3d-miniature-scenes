@@ -24,6 +24,8 @@ camera.layers.enable(1);
 export const controls = new OrbitControls(camera, canvas);
 
 let composer = null, fxaa = null, ao = null;
+export let bloomPass = null;   // 天色（src/engine/sky.js）依時間調整強度與門檻
+export let baseDistance = 0;   // 寬螢幕上剛好框住場景的相機距離；直式螢幕或拉遠時，霧依這個距離往後推
 let clampBox = null;
 const resizeHooks = [];
 export const onResize = f => resizeHooks.push(f);
@@ -72,6 +74,7 @@ export function setupRenderer(o) {
   const target = new THREE.Vector3(...v.target);
   const vt = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   const d = Math.min(v.max ?? 200, Math.max(v.frame[0] / (2 * vt), v.frame[1] / (2 * vt * camera.aspect)));
+  baseDistance = v.frame[0] / (2 * vt);
   const az = THREE.MathUtils.degToRad(v.azimuth), el = THREE.MathUtils.degToRad(v.elevation);
   camera.position.set(target.x + d * Math.cos(el) * Math.sin(az), target.y + d * Math.sin(el), target.z + d * Math.cos(el) * Math.cos(az));
   controls.target.copy(target);
@@ -114,7 +117,8 @@ export function setupRenderer(o) {
   }
   composer.addPass(new ShaderPass(NaNGuardShader));
   const b = o.bloom ?? { strength: 0.5, radius: 0.55, threshold: 0.92 };
-  composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), b.strength, b.radius, b.threshold));
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), b.strength, b.radius, b.threshold);
+  composer.addPass(bloomPass);
   composer.addPass(new OutputPass());
   if (o.vignette) {
     const v = new ShaderPass(VignetteShader);

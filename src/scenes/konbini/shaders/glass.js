@@ -1,11 +1,12 @@
-// 帶雨痕的玻璃：靜止水珠 + 往下滑的水滴與水痕 + 邊緣反光
+// 帶雨痕的玻璃：靜止水珠 + 往下滑的水滴與水痕 + 邊緣反光；雨停後水珠跟著地面一起慢慢乾掉
 import * as THREE from 'three';
 import { U, scene } from '../../../engine/context.js';
 import { rng } from '../../../engine/random.js';
+import { EU } from '../../../engine/env.js';
 
 export function glassMat(w, h) {
   return new THREE.ShaderMaterial({
-    uniforms: { time: U.time, size: { value: new THREE.Vector2(w, h) }, seed: { value: rng() * 50 } },
+    uniforms: { time: U.time, size: { value: new THREE.Vector2(w, h) }, seed: { value: rng() * 50 }, wet: EU.wet },
     vertexShader: /* glsl */`
       varying vec2 vUv; varying vec3 vW; varying vec3 vN;
       void main() {
@@ -15,7 +16,7 @@ export function glassMat(w, h) {
         gl_Position = projectionMatrix * viewMatrix * wp;
       }`,
     fragmentShader: /* glsl */`
-      uniform float time; uniform vec2 size; uniform float seed;
+      uniform float time; uniform vec2 size; uniform float seed; uniform float wet;
       varying vec2 vUv; varying vec3 vW; varying vec3 vN;
       float h21(vec2 p) { p = fract(p * vec2(233.34, 851.73)); p += dot(p, p + 23.45); return fract(p.x * p.y); }
       void main() {
@@ -35,7 +36,8 @@ export function glassMat(w, h) {
         float xm = (fract(cx) - 0.5) * colW + sin(p.y * 7.0 + hc * 30.0) * 0.012;
         float head = 1.0 - smoothstep(0.008, 0.02, length(vec2(xm, (ym - 0.06) * 0.8)));
         float trail = (1.0 - smoothstep(0.0015, 0.006, abs(xm))) * step(0.06, ym) * (1.0 - smoothstep(0.06, 0.75, ym));
-        float run = (head + trail * 0.5) * step(0.45, hc);
+        float run = (head + trail * 0.5) * step(0.45, hc) * wet * wet;
+        bead *= smoothstep(h * 0.5, h * 0.5 + 0.3, wet);   // 乾的時候小水珠先消失
         vec3 V = normalize(cameraPosition - vW);
         float fres = pow(1.0 - abs(dot(normalize(vN), V)), 3.0);
         float a = 0.06 + fres * 0.3 + bead * 0.32 + run * 0.6;

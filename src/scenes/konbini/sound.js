@@ -1,8 +1,10 @@
-// 雨夜的聲音
-// 錄音：整片的雨聲鋪底；雨棚下的滴水與排水溝放在店門口，拉近店面才聽得清楚
-// 合成（跟畫面同步）：屋簷水滴落進水窪、自動門開關與入店鈴、招牌與巷口路燈閃爍時的電流聲、店裡透出的空調聲、自販機的低鳴
+// 街角的聲音
+// 錄音：雨聲鋪底（跟著雨量變大變小）；雨棚下的滴水與排水溝放在店門口，拉近店面才聽得清楚，雨停後還會滴一陣子
+//       晴朗的夜晚有秋蟲（借用紅葉屋的錄音）；雪夜只剩店裡與自販機的聲音
+// 合成（跟畫面同步）：屋簷水滴落進水窪、自動門開關與入店鈴、招牌與巷口路燈閃爍時的電流聲、店裡透出的空調聲、自販機的低鳴、白天遠處市街的低鳴
 // 音檔來源與授權見 assets/audio/CREDITS.md
 import { ambience } from '../../engine/audio.js';
+import { ENV } from '../../engine/env.js';
 
 const DOOR = [2.2, 1.4, 1.15];
 const VEND = [4.7, 1.0, -4.7];
@@ -11,9 +13,20 @@ export function buildSound() {
   ambience({
     rain: 'assets/audio/konbini/rain.mp3',
     eaves: 'assets/audio/konbini/eaves.mp3',
+    crickets: 'assets/audio/ryokan/crickets.mp3',
   }, (A, B) => {
-    A.bed(B.rain, { gain: 0.62, seg: [9, 16], xf: 3 });
-    A.bed(B.eaves, { gain: 0.85, seg: [8, 14], dest: A.spot(-0.8, 1.2, 2.6, { ref: 11 }) });
+    const RAIN = 0.62, EAVES = 0.85, BUGS = 0.07, CITY = 0.05;
+    const rain = A.bed(B.rain, { gain: RAIN * ENV.rain, seg: [9, 16], xf: 3 });
+    const eaves = A.bed(B.eaves, { gain: EAVES * ENV.wet, seg: [8, 14], dest: A.spot(-0.8, 1.2, 2.6, { ref: 11 }) });
+    const bugs = A.bed(B.crickets, { gain: 0, seg: [8, 14], xf: 3 });
+    const city = cityHum(A);
+    A.tick(() => {
+      const t = A.ctx.currentTime, clear = 1 - ENV.cloud;
+      rain.gain.setTargetAtTime(RAIN * ENV.rain, t, 0.5);
+      eaves.gain.setTargetAtTime(EAVES * Math.max(ENV.rain, ENV.wet * 0.6), t, 0.8);
+      bugs.gain.setTargetAtTime(BUGS * (1 - ENV.day) * clear * clear, t, 1.5);
+      city.gain.setTargetAtTime(CITY * ENV.day * (1 - 0.6 * ENV.snow), t, 1.2);
+    });
     const store = storeAir(A);
     hum(A);
     A.on('drip', (x, z) => plip(A, x, z));
@@ -142,6 +155,20 @@ function buzz(A, x, y, z, dur) {
   g.gain.setValueAtTime(0, t + dur);
   o.start(t); o.stop(t + dur + 0.05);
   o.onended = () => p.disconnect();
+}
+
+// 白天遠處市街的低鳴：濾到只剩低頻的噪音，跟著天亮漸漸浮現
+function cityHum(A) {
+  const { ctx } = A;
+  const s = ctx.createBufferSource();
+  s.buffer = A.noise; s.loop = true;
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = 240; lp.Q.value = 0.3;
+  const g = ctx.createGain();
+  g.gain.value = 0;
+  s.connect(lp).connect(g).connect(A.out);
+  s.start();
+  return g;
 }
 
 // 一小段濾過的噪音（水花、碰撞）

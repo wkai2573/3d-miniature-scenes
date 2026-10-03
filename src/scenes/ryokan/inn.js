@@ -1,10 +1,12 @@
 // 溫泉旅館「紅葉屋」：二層主屋、入母屋屋頂、障子、緣側、玄關（暖簾、看板、行燈）、渡り廊下、湯屋
+// 障子、格子門、行燈與點光源天亮就熄（nightGlow / nightLight），白天的障子只剩和紙的顏色
 import * as THREE from 'three';
 import { PI } from '../../engine/context.js';
 import { pLight } from '../../engine/lights.js';
 import { canvasTex, txt } from '../../engine/canvas.js';
 import { soft, glow } from '../../engine/materials.js';
 import { box, plane, rod, hipRoof, irimoyaRoof } from '../../engine/geometry.js';
+import { nightGlow, nightLight } from '../../engine/env.js';
 import { lightPool, roofMats, plankMat } from './shapes.js';
 import { C } from './palette.js';
 import { INN, ANNEX, GENKAN_X } from './layout.js';
@@ -48,8 +50,8 @@ function makeTextures() {
 
 export function buildInn() {
   const T = makeTextures();
-  const shojiMat = glow('#ffffff', 1.05, { map: T.shoji });
-  const shojiDim = glow('#ffffff', 0.85, { map: T.shojiDim });
+  const shojiMat = nightGlow(glow('#ffffff', 1.05, { map: T.shoji }), 0.75);
+  const shojiDim = nightGlow(glow('#ffffff', 0.85, { map: T.shojiDim }), 0.8);
   const roofs = roofMats(C);
   const planks = plankMat(C);
   const cx = (INN.x0 + INN.x1) / 2, cz = (INN.z0 + INN.z1) / 2;
@@ -73,7 +75,7 @@ export function buildInn() {
   for (let i = 0; i <= 4; i++) box(0.18, 2.7, 0.18, C.woodDark, xr, B, INN.z0 + i * 1.25);
   box(0.16, 0.2, D + 0.1, C.wood, xr + 0.02, 2.6, cz);
   for (const i of [0, 3]) plane(1.07, 2.0, shojiMat, INN.x1 + 0.015, B + 1.08, INN.z0 + 0.625 + i * 1.25, { ry: PI / 2 });
-  plane(2.3, 2.05, glow('#ffffff', 0.9, { map: T.genkan }), INN.x1 + 0.015, B + 1.05, CORR_Z, { ry: PI / 2 });   // 通往連廊
+  plane(2.3, 2.05, nightGlow(glow('#ffffff', 0.9, { map: T.genkan }), 0.7), INN.x1 + 0.015, B + 1.05, CORR_Z, { ry: PI / 2 });   // 通往連廊
 
   // ---- 緣側 ----
   box(W + 0.4, 0.12, 1.1, planks, cx, B - 0.12, INN.z1 + 0.55, { cast: true });
@@ -98,7 +100,7 @@ export function buildInn() {
 
   // ---- 玄關 ----
   const gx = GENKAN_X, gz = INN.z1;
-  plane(2.3, 2.05, glow('#ffffff', 1.15, { map: T.genkan }), gx, B + 1.04, gz + 0.013);
+  plane(2.3, 2.05, nightGlow(glow('#ffffff', 1.15, { map: T.genkan }), 0.6), gx, B + 1.04, gz + 0.013);
   for (const x of [gx - 1.2, gx + 1.2]) box(0.2, 2.75, 0.2, C.woodDark, x, 0, gz + 1.25, { cast: true });
   box(2.8, 0.22, 0.24, C.wood, gx, 2.6, gz + 1.25);
   irimoyaRoof(2.9, 3.3, 1.15, roofs, gx, 2.82, gz + 1.0, { ry: PI / 2, hip: 0.35, thick: 0.14 });
@@ -109,7 +111,7 @@ export function buildInn() {
   plane(0.9, 0.34, soft('#ffffff', { map: T.sign, emissive: '#2a1a10', ei: 0.5 }), gx, 3.4, gz + 1.9);
   box(1.4, 0.2, 0.7, C.stoneWarm, gx, 0, gz + 1.45, { cast: true });    // 沓脫石
   // 行燈
-  const andon = glow(C.shoji, 1.7);
+  const andon = nightGlow(glow(C.shoji, 1.7), 0.4);
   for (const x of [gx - 1.85, gx + 1.85]) {
     box(0.4, 0.08, 0.4, C.woodDark, x, 0, gz + 1.6);
     box(0.3, 0.62, 0.3, andon, x, 0.08, gz + 1.6, { cast: false });
@@ -117,17 +119,17 @@ export function buildInn() {
     box(0.4, 0.05, 0.4, C.woodDark, x, 0.78, gz + 1.6);
   }
   // 軒燈
-  const eaveLamp = glow(C.lamp, 2.0);
+  const eaveLamp = nightGlow(glow(C.lamp, 2.0), 0.35);
   for (const x of [INN.x0 - 0.3, INN.x1 + 0.3]) {
     rod([x, 3.05, gz + 1.0], [x, 2.75, gz + 1.0], 0.012, C.woodDark, { outline: false });
     box(0.2, 0.28, 0.2, eaveLamp, x, 2.47, gz + 1.0);
   }
 
   // 燈光：障子透出的光、玄關、二樓
-  pLight(C.shoji, 12, -5.6, 1.7, INN.z1 + 0.5, 8);
-  pLight(C.shoji, 12, 0.7, 1.7, INN.z1 + 0.5, 8);
-  pLight(C.lamp, 14, gx, 1.9, gz + 1.8, 8);
-  pLight(C.shoji, 10, cx, 4.6, z2 + 0.6, 8);
+  nightLight(pLight(C.shoji, 12, -5.6, 1.7, INN.z1 + 0.5, 8));
+  nightLight(pLight(C.shoji, 12, 0.7, 1.7, INN.z1 + 0.5, 8));
+  nightLight(pLight(C.lamp, 14, gx, 1.9, gz + 1.8, 8));
+  nightLight(pLight(C.shoji, 10, cx, 4.6, z2 + 0.6, 8));
   lightPool(-5.0, INN.z1 + 1.8, 2.2, 0.35);
   lightPool(0.4, INN.z1 + 1.8, 2.2, 0.35);
   lightPool(gx, gz + 2.1, 1.8, 0.45);
@@ -157,11 +159,11 @@ function buildAnnex(roofs, shojiMat, T) {
   for (let i = 0; i <= 4; i++) box(0.16, 2.45, 0.16, C.woodDark, x0 + i * W / 4, 0.35, z1 + 0.02);
   box(W + 0.1, 0.16, 0.14, C.wood, cx, 2.62, z1 + 0.03);
   // 入口：紅色「ゆ」暖簾
-  plane(1.0, 2.0, glow('#ffffff', 1.1, { map: T.genkan }), cx, 1.35, z1 + 0.013);
+  plane(1.0, 2.0, nightGlow(glow('#ffffff', 1.1, { map: T.genkan }), 0.6), cx, 1.35, z1 + 0.013);
   const redNoren = soft('#ffffff', { map: T.noren('#a8322a', '#fff4e6'), side: THREE.DoubleSide, alphaTest: 0.5, emissive: '#301010', ei: 0.6, noCache: true });
   plane(1.1, 0.7, redNoren, cx, 2.2, z1 + 0.14);
   for (const x of [x0 + W / 8, x1 - W / 8]) plane(0.85, 0.9, shojiMat, x, 1.75, z1 + 0.013);
-  plane(1.4, 0.8, glow('#ffffff', 0.9, { map: T.genkan }), x1 + 0.013, 1.8, cz, { ry: PI / 2 });
+  plane(1.4, 0.8, nightGlow(glow('#ffffff', 0.9, { map: T.genkan }), 0.7), x1 + 0.013, 1.8, cz, { ry: PI / 2 });
   irimoyaRoof(W + 1.2, D + 1.3, 1.9, roofs, cx, 2.78, cz, { hip: 0.45, thick: 0.16 });
-  pLight(C.shoji, 10, cx, 1.6, z1 + 0.6, 7);
+  nightLight(pLight(C.shoji, 10, cx, 1.6, z1 + 0.6, 7));
 }

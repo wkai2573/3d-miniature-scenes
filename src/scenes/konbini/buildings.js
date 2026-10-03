@@ -1,4 +1,5 @@
 // 周邊建築：公寓「月見荘」、後方民宅、側街對面的圍牆與植栽
+// 窗燈、走廊燈、玄關燈天亮就熄（nightGlow），白天只剩窗簾的顏色
 import * as THREE from 'three';
 import { PI } from '../../engine/context.js';
 import { rand, pick } from '../../engine/random.js';
@@ -6,6 +7,7 @@ import { canvasTex, txt } from '../../engine/canvas.js';
 import { toon, glow } from '../../engine/materials.js';
 import { G, add, box, cyl, plane, grp, hipRoof } from '../../engine/geometry.js';
 import { acUnit, bicycle } from './props.js';
+import { nightGlow } from '../../engine/env.js';
 
 export function buildBuildings() {
   const win = makeWindowMaterials();
@@ -42,8 +44,8 @@ function makeWindowMaterials() {
     g.strokeStyle = '#5d6470'; g.lineWidth = 6; g.strokeRect(0, 0, w, h);
   });
   return {
-    lit: glow('#ffffff', 1.05, { map: curtain }),
-    lit2: glow('#ffffff', 0.95, { map: curtain2 }),
+    lit: nightGlow(glow('#ffffff', 1.05, { map: curtain }), 0.5),
+    lit2: nightGlow(glow('#ffffff', 0.95, { map: curtain2 }), 0.5),
     dark: toon('#ffffff', { map: dark, emissive: '#0a1020', ei: 0.4 }),
     shutter: toon('#ffffff', { map: shutter }),
   };
@@ -73,7 +75,7 @@ function buildApartment(win) {
   for (const y of [2.7, 5.5, 8.25]) box(1.2, 0.18, 15, '#c9c3b6', -9.4, y, AZ, { cast: true, t: 0.02 });
   for (const y of [2.7, 5.5]) box(0.08, 1.0, 15, '#d9d4c9', -8.84, y + 0.18, AZ, { t: 0.015 });
   for (const z of [-13.3, AZ, 1.5]) box(0.2, 8.25, 0.2, '#c9c3b6', -8.9, 0, z, { t: 0.02 });
-  const corrLight = glow('#e8f4ff', 1.9);
+  const corrLight = nightGlow(glow('#e8f4ff', 1.9), 0.4);
   const units = [-11.5, -7.7, -3.9, -0.1];
   const litPlan = [[1, 0, 1, 0], [0, 1, 0, 0], [0, 0, 1, 1]];   // 哪幾戶還亮著燈
   for (let f = 0; f < 3; f++) {
@@ -92,7 +94,7 @@ function buildApartment(win) {
 
   // 樓梯間（夜燈從縫窗透出）
   box(1.4, 8.6, 1.8, '#b3ac9e', -9.5, 0, 2.5, { cast: true, t: 0.035 });
-  const stairGlow = glow('#dff0ff', 1.4);
+  const stairGlow = nightGlow(glow('#dff0ff', 1.4), 0.45);
   for (const y of [1.4, 4.2, 7.0]) {
     plane(0.22, 1.7, stairGlow, -8.795, y, 2.5, { ry: PI / 2 });
     plane(0.9, 0.22, stairGlow, -9.5, y + 0.9, 3.405);
@@ -154,9 +156,9 @@ function buildHouse(win) {
     for (let y = 0; y <= h; y += 26) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
     g.lineWidth = 10; g.strokeRect(0, 0, w, h); g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.stroke();
   });
-  plane(1.5, 1.95, glow('#ffffff', 0.8, { map: genkanTex }), 2.8, 1.0, -9.195);
+  plane(1.5, 1.95, nightGlow(glow('#ffffff', 0.8, { map: genkanTex }), 0.65), 2.8, 1.0, -9.195);
   box(1.8, 0.08, 0.7, '#3c4252', 2.8, 2.25, -8.9, { t: 0.015 });
-  box(0.14, 0.2, 0.08, glow('#ffd49a', 2.2), 3.75, 1.9, -9.15, { outline: false });
+  box(0.14, 0.2, 0.08, nightGlow(glow('#ffd49a', 2.2), 0.35), 3.75, 1.9, -9.15, { outline: false });
   box(1.6, 0.18, 0.6, '#9a958c', 2.8, 0, -8.9, { t: 0.01 });
   acUnit(4.95, 0, -11.0, PI / 2);
 

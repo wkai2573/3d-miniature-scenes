@@ -2,13 +2,14 @@
 // 座標：1 單位 = 1 公尺；底座範圍 x、z 皆為 -14 ~ 14；+z 朝大馬路（相機所在側）
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { scene, U, DPR, PI } from '../../engine/context.js';
+import { scene, U, DPR, PI, onTick } from '../../engine/context.js';
 import { onResize } from '../../engine/renderer.js';
 import { rng, rand, pick } from '../../engine/random.js';
 import { canvasTex, txt } from '../../engine/canvas.js';
 import { toon } from '../../engine/materials.js';
 import { box } from '../../engine/geometry.js';
 import { WetShader } from './shaders/wetGround.js';
+import { ENV, EU } from '../../engine/env.js';
 
 export const HALF = 14;
 
@@ -176,7 +177,7 @@ export function buildBase() {
   ground.receiveShadow = true;
   scene.add(ground);
 
-  // 濕地反射（圖層 0 的物件才會被反射）
+  // 濕地反射（圖層 0 的物件才會被反射）；濕度跟著天氣變化
   const REFL_SCALE = 0.5;
   const wet = new Reflector(new THREE.PlaneGeometry(28, 28), {
     textureWidth: Math.round(innerWidth * DPR * REFL_SCALE),
@@ -189,8 +190,11 @@ export function buildBase() {
   wet.material.depthWrite = false;
   wet.material.uniforms.tMask.value = makeWetMask();
   wet.material.uniforms.time = U.time;
+  wet.material.uniforms.wet = EU.wet;
+  wet.material.uniforms.rain = EU.rain;
   wet.userData.dynamic = true;
   scene.add(wet);
+  onTick(() => { wet.visible = ENV.wet > 0.004; });   // 路面乾了就不必再算反射
   onResize((w, h) => wet.getRenderTarget().setSize(Math.round(w * DPR * REFL_SCALE), Math.round(h * DPR * REFL_SCALE)));
 
   // 路緣石、輪擋

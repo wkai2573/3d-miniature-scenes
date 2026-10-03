@@ -8,6 +8,7 @@ import { toon, glow } from '../../engine/materials.js';
 import { G, add, box, cyl, plane, rod, grp } from '../../engine/geometry.js';
 import { bicycle } from './props.js';
 import { cue } from '../../engine/audio.js';
+import { ENV, nightColor, nightGlow, nightLight } from '../../engine/env.js';
 
 // 回傳路燈位置，給雨絲 shader 做打光
 export function buildStreet() {
@@ -90,7 +91,7 @@ function buildPoles() {
   return { PA, PB, PC, PD };
 }
 
-// ---- 路燈（掛在電線桿上）與雨中的光束 ----
+// ---- 路燈（掛在電線桿上）與雨中的光束：天亮就熄燈 ----
 function buildLamps({ PA, PB, PC, PD }) {
   const beamMat = new THREE.ShaderMaterial({
     uniforms: { col: { value: new THREE.Color('#9fbfff').multiplyScalar(0.055) } },
@@ -111,7 +112,8 @@ function buildLamps({ PA, PB, PC, PD }) {
       }`,
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   });
-  const lens = glow('#e8f0ff', 1.6);
+  nightColor(beamMat.uniforms.col.value);
+  const lens = nightGlow(glow('#e8f0ff', 1.6), 0.35);
   const positions = [];
   const lamp = (px, pz, dx, dz, h = 5.8, reach = 0.95) => {
     const g0 = grp(px, 0, pz, Math.atan2(dx, dz));
@@ -128,9 +130,9 @@ function buildLamps({ PA, PB, PC, PD }) {
     scene.add(cone);
     return pLight('#cfe0ff', 45, p.x, p.y, p.z, 15);
   };
-  lamp(PA.x, PA.z, 1, 0);
-  lamp(PB.x, PB.z, 1, 0);
-  lamp(PC.x, PC.z, 1, 0.2);
+  nightLight(lamp(PA.x, PA.z, 1, 0));
+  nightLight(lamp(PB.x, PB.z, 1, 0));
+  nightLight(lamp(PC.x, PC.z, 1, 0.2));
   const alleyLamp = lamp(PD.x, PD.z, 0, 1);
 
   // 巷口路燈偶爾暗一下
@@ -138,9 +140,9 @@ function buildLamps({ PA, PB, PC, PD }) {
   onTick(t => {
     if (!reduceMotion && t > next) {
       end = t + rand(0.2, 0.5); next = t + rand(15, 30);
-      cue('flicker', alleyLamp.position.x, alleyLamp.position.y, alleyLamp.position.z, end - t);
+      if (ENV.lamps > 0.5) cue('flicker', alleyLamp.position.x, alleyLamp.position.y, alleyLamp.position.z, end - t);
     }
-    alleyLamp.intensity = t < end ? 45 * (Math.sin(t * 40) > 0 ? 1 : 0.55) : 45;
+    alleyLamp.intensity = (t < end ? 45 * (Math.sin(t * 40) > 0 ? 1 : 0.55) : 45) * ENV.lamps;
   });
   return positions;
 }
@@ -253,5 +255,5 @@ function buildNoticeBoard() {
   box(1.6, 1.0, 0.08, '#6f5a44', x, 0.95, z, { t: 0.015, cast: true });
   plane(1.5, 0.92, toon('#ffffff', { map: t, emissive: '#1a2a20', ei: 0.5 }), x, 1.45, z + 0.042);
   box(1.8, 0.05, 0.36, '#4a3a2e', x, 2.08, z + 0.05, { t: 0.012, rx: 0.18 });
-  box(0.5, 0.05, 0.06, glow('#e8f4ff', 1.8), x, 2.0, z + 0.2, { outline: false });
+  box(0.5, 0.05, 0.06, nightGlow(glow('#e8f4ff', 1.8), 0.4), x, 2.0, z + 0.2, { outline: false });
 }

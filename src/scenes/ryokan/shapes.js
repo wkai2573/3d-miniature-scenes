@@ -6,6 +6,7 @@ import { noise3 } from '../../engine/noise.js';
 import { soft, glow } from '../../engine/materials.js';
 import { G, add, plane } from '../../engine/geometry.js';
 import { canvasTex } from '../../engine/canvas.js';
+import { nightGlow } from '../../engine/env.js';
 import { heightAt } from './terrain.js';
 
 // 多面體岩石：Icosahedron 加雜訊位移；non-indexed 幾何算出的法線是每面一個，保留切面感
@@ -82,7 +83,7 @@ export function blob(x, y, z, sx, sy, sz, mat, o = {}) {
   return add(m, { cast: o.cast ?? true, parent: o.parent });
 }
 
-// 燈火投在地面的暖色光斑（加法混合），補足點光源數量的不足
+// 燈火投在地面的暖色光斑（加法混合），補足點光源數量的不足；天亮就消失
 let poolMat = null;
 const poolMats = {};
 export function lightPool(x, z, r, k = 0.5) {
@@ -95,7 +96,7 @@ export function lightPool(x, z, r, k = 0.5) {
     }),
   });
   // 每種強度共用一個材質（顏色＝暖橘 × 強度），合併網格時才不會拆成太多組
-  poolMats[k] ??= Object.assign(poolMat.clone(), { color: new THREE.Color('#ff9a4a').multiplyScalar(k * 0.8) });
+  poolMats[k] ??= nightGlow(Object.assign(poolMat.clone(), { color: new THREE.Color('#ff9a4a').multiplyScalar(k * 0.8) }));
   if (lifting) {                                   // 抬高的模組裡：建在局部的平地上
     const m = plane(r * 2, r * 2, poolMats[k], x, 0.03, z, { rx: -PI / 2 });
     m.userData.noAO = true;

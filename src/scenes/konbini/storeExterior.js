@@ -12,6 +12,7 @@ import { glassPane } from './shaders/glass.js';
 import { acUnit } from './props.js';
 import { WALL, FRAME, KICK, CANOPY, CORAL, MUSTARD, TEAL, CREAM } from './palette.js';
 import { cue } from '../../engine/audio.js';
+import { nightGlow } from '../../engine/env.js';
 
 export function buildStoreExterior() {
   // ---- 地板 ----
@@ -117,7 +118,7 @@ function buildCanopy() {
     side.addColorStop(0, 'rgba(0,0,0,1)'); side.addColorStop(0.08, 'rgba(0,0,0,0)'); side.addColorStop(0.92, 'rgba(0,0,0,0)'); side.addColorStop(1, 'rgba(0,0,0,1)');
     g.globalCompositeOperation = 'destination-out'; g.fillStyle = side; g.fillRect(0, 0, w, h);
   });
-  const windowLightMat = glow('#ffffff', 0.55, { map: windowLightTex, additive: true });
+  const windowLightMat = nightGlow(glow('#ffffff', 0.55, { map: windowLightTex, additive: true }), 0.15);   // 白天被陽光蓋過
   plane(7.4, 3.2, windowLightMat, -2.0, 0.02, 2.55, { rx: -PI / 2 });
   plane(3.8, 2.4, windowLightMat, 5.15, 0.02, -1.05, { rx: -PI / 2, rz: PI / 2 });
 }

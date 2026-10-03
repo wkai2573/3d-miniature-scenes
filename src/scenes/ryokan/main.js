@@ -4,6 +4,7 @@ import { scene, U, ticks } from '../../engine/context.js';
 import { renderer, resize, render } from '../../engine/renderer.js';
 import { loadFonts } from '../../engine/canvas.js';
 import { staticBatch } from '../../engine/batch.js';
+import { weatherSurfaces } from '../../engine/surface.js';
 import { setupRyokan } from './setup.js';
 import { buildIsland } from './island.js';
 import { buildInn } from './inn.js';
@@ -14,6 +15,7 @@ import { buildGroundcover } from './groundcover.js';
 import { startWind } from './wind.js';
 import { buildFallingLeaves } from './fallingLeaves.js';
 import { buildAtmosphere } from './atmosphere.js';
+import { buildWeather } from './weather.js';
 import { buildSound } from './sound.js';
 import { onLevel } from './shapes.js';
 import { LV } from './layout.js';
@@ -32,10 +34,12 @@ buildFlora();
 buildGroundcover();
 buildFallingLeaves();
 buildAtmosphere();
+buildWeather();
 startWind();
 buildSound();
 
 staticBatch(scene);
+weatherSurfaces(scene, { x: [-16, 16], z: [-17, 17], wet: 0.3 });   // 積雪，以及雨天露天地面變暗
 
 const clock = new THREE.Clock();
 function frame() {

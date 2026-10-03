@@ -1,8 +1,11 @@
 // 水面：池塘（深青）與溫泉（乳白綠）共用的 shader，不做即時反射
 // 平靜的水：緩慢的大尺度起伏、依視角變化的天空倒影、被波紋打散的燈火倒影
-// 漣漪只出現在有原因的地方：落葉入水（addRipple）、瀑布落點與湯口（固定發射點 emitters）
+// 漣漪只出現在有原因的地方：落葉入水（addRipple）、瀑布落點與湯口（固定發射點 emitters），以及下雨時的雨滴
+// 天空倒影：夜裡用各水面自己調好的顏色，其他時間換成當下的天色（SKY.now）；燈火倒影天亮就熄
 import * as THREE from 'three';
-import { U, PI } from '../../engine/context.js';
+import { U, PI, onTick } from '../../engine/context.js';
+import { ENV, EU } from '../../engine/env.js';
+import { SKY } from '../../engine/sky.js';
 
 // 所有水面共用的事件漣漪：x, z, 開始時間, 強度
 const MAX_R = 8;
@@ -23,7 +26,7 @@ const VERT = /* glsl */`
   }`;
 
 const FRAG = /* glsl */`
-  uniform float time, reflectK, calm;
+  uniform float time, reflectK, calm, rain;
   uniform vec3 shallow, deep, shore, skyLo, skyHi, lampColor;
   uniform vec3 lamps[3];
   uniform int nLamps;
@@ -38,6 +41,30 @@ const FRAG = /* glsl */`
     return sin(b * 2.6) * exp(-b * b * 0.6) * exp(-age * 1.3);
   }
 
+  // 雨滴打在水面：兩層網格，每格一個隨機位置週期性擴散一圈小波紋（雨越大，有雨滴的格子越多）
+  // 回傳 xy 坡度、z 波峰的亮度（讓圓紋在平靜的倒影上也看得出來）
+  float h21(vec2 q) { q = fract(q * vec2(123.34, 456.21)); q += dot(q, q + 45.32); return fract(q.x * q.y); }
+  vec3 rainField(vec2 p, float t, float amount) {
+    vec3 acc = vec3(0.0);
+    for (int layer = 0; layer < 2; layer++) {
+      vec2 q = p * (layer == 0 ? 1.7 : 2.6) + float(layer) * 17.0;
+      vec2 cell = floor(q);
+      for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+        vec2 c = cell + vec2(float(i), float(j));
+        float h = h21(c);
+        if (h21(c + 5.7) > amount) continue;
+        vec2 ctr = c + 0.25 + 0.5 * vec2(h21(c + 11.3), h21(c + 27.1));
+        float ph = fract(t * (0.55 + 0.4 * h) + h * 7.0);
+        vec2 d = q - ctr; float r = length(d);
+        float band = r - ph * 0.55, fade = (1.0 - ph) * (1.0 - ph);
+        float env = exp(-band * band * 140.0) * fade;
+        acc.xy += d / max(r, 1e-4) * sin(band * 30.0) * env;
+        acc.z += env * (1.0 - 0.6 * ph);
+      }
+    }
+    return acc;
+  }
+
   void main() {
     vec2 p = vW.xz;
     // 緩慢的大尺度起伏（高度場的梯度）
@@ -46,6 +73,8 @@ const FRAG = /* glsl */`
     g += vec2(-0.5, 0.86) * cos(dot(p, vec2(-0.5, 0.86)) * 2.3 - time * 0.6) * 0.016;
     g += vec2(0.3, -0.95) * cos(dot(p, vec2(0.3, -0.95)) * 4.1 + time * 0.8) * 0.008;
     g *= calm;
+    float drops = 0.0;
+    if (rain > 0.01) { vec3 rf = rainField(p, time, rain * 0.8); g += rf.xy * 0.12; drops = rf.z; }
     // 事件漣漪
     for (int i = 0; i < ${MAX_R}; i++) {
       vec4 e = ripples[i];
@@ -82,6 +111,9 @@ const FRAG = /* glsl */`
       col += lampColor * (pow(c, 1400.0) * 2.4 + pow(c, 90.0) * 0.22) * reflectK;
       col += lampColor * exp(-dot(L.xz, L.xz) / 2.2) * 0.12;
     }
+    // 雨滴圓紋：深色的水面上是反射天光的亮圈，乳白的溫泉上是較暗的波影
+    float lum = dot(col, vec3(0.3, 0.59, 0.11));
+    col += mix(mix(skyLo, vec3(0.55, 0.6, 0.7), 0.3) * 0.45 * reflectK, -col * 0.45, smoothstep(0.2, 0.5, lum)) * drops;
     // 岸邊一圈淺色水線
     col = mix(col, shore, (1.0 - smoothstep(0.0, 0.05, vDepth)) * 0.55);
     gl_FragColor = vec4(col, 1.0);
@@ -91,7 +123,8 @@ const FRAG = /* glsl */`
 /**
  * o.grid: { x0, z0, x1, z1, depth(x, z) }  → 細分平面，深度由函式給（池塘：水位 − 地面）
  * o.ellipse: { cx, cz, rx, rz, depth }      → 橢圓（溫泉），中央最深
- * 其他：y, shallow, deep, shore, sky:[低, 高], lamps:[[x,y,z]…]（世界座標）, lampColor, emitters:[[x,z,每秒圈數,強度]…], reflect, calm
+ * 其他：y, shallow, deep, shore, sky:[低, 高]（夜裡的天空倒影）, skyGain（白天天空倒影的亮度）, lamps:[[x,y,z]…]（世界座標）, lampColor,
+ *       emitters:[[x,z,每秒圈數,強度]…], reflect, calm
  */
 export function waterMesh(o) {
   let geo;
@@ -119,6 +152,7 @@ export function waterMesh(o) {
   const mat = new THREE.ShaderMaterial({
     uniforms: {
       time: U.time,
+      rain: EU.rain,
       reflectK: { value: o.reflect ?? 1 },
       calm: { value: o.calm ?? 1 },
       shallow: { value: new THREE.Color(o.shallow) },
@@ -138,5 +172,20 @@ export function waterMesh(o) {
   const m = new THREE.Mesh(geo, mat);
   m.position.y = o.y ?? 0;
   m.receiveShadow = false;
+  waters.push({ u: mat.uniforms, lo: mat.uniforms.skyLo.value.clone(), hi: mat.uniforms.skyHi.value.clone(), lamp: mat.uniforms.lampColor.value.clone(), gain: o.skyGain ?? 1 });
+  if (waters.length === 1) onTick(updateWaters);
   return m;
+}
+
+// ---- 每格：天空倒影與燈火倒影跟著時間變化 ----
+const waters = [];
+const _c = new THREE.Color();
+function updateWaters() {
+  const s = Math.min(1, Math.max(0, (ENV.sun + 0.25) / 0.15)), w = s * s * (3 - 2 * s);   // 0 夜晚 → 1 藍調時刻以後
+  const sky = SKY.now.sky;
+  for (const W of waters) {
+    W.u.skyLo.value.lerpColors(W.lo, _c.copy(sky[2]).multiplyScalar(W.gain), w);
+    W.u.skyHi.value.lerpColors(W.hi, _c.copy(sky[0]).multiplyScalar(W.gain), w);
+    W.u.lampColor.value.copy(W.lamp).multiplyScalar(ENV.lamps);
+  }
 }

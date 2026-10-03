@@ -17,7 +17,7 @@ export function buildOnsen() {
   // 乳白溫泉：倒影淡、起伏小；漣漪只從湯口落點擴散（這裡在 onLevel 裡建造，燈與湯口用世界座標）
   scene.add(waterMesh({
     ellipse: { cx, cz, rx, rz, depth: 0.5 }, y: 0.1, shallow: '#98cbc8', deep: '#4c93a0', shore: '#cfe6e0', sky: ['#8c7caa', '#3a3060'],
-    lamps: [[yukimi[0], LV.up + 0.72, yukimi[1]]], lampColor: '#ffb070', emitters: [[cx + rx - 0.47, cz - 0.54, 2.2, 0.8]], reflect: 0.55, calm: 0.5,
+    lamps: [[yukimi[0], LV.up + 0.72, yukimi[1]]], lampColor: '#ffb070', emitters: [[cx + rx - 0.47, cz - 0.54, 2.2, 0.8]], reflect: 0.55, calm: 0.5, skyGain: 1.1,
   }));
 
   // ---- 圍池的岩石（靠平台那側留給木板）----

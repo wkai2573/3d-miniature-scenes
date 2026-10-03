@@ -1,10 +1,11 @@
 // 濕潤路面：Reflector 的鏡面反射 + 程序化雨滴波紋 + 縱向拉長的倒影
 // tMask 的 R 通道是濕度：0 乾燥、0.4~0.5 濕路面、接近 1 是水窪
+// wet（0 ~ 1）是整體的濕度：雨停後路面慢慢變乾，水窪最後才消失；rain 控制雨滴波紋
 export const WetShader = {
   name: 'WetGround',
   uniforms: {
     color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: null },
-    tMask: { value: null }, time: { value: 0 },
+    tMask: { value: null }, time: { value: 0 }, wet: { value: 1 }, rain: { value: 1 },
   },
   vertexShader: /* glsl */`
     uniform mat4 textureMatrix;
@@ -17,7 +18,7 @@ export const WetShader = {
       gl_Position = projectionMatrix * viewMatrix * wp;
     }`,
   fragmentShader: /* glsl */`
-    uniform vec3 color; uniform sampler2D tDiffuse; uniform sampler2D tMask; uniform float time;
+    uniform vec3 color; uniform sampler2D tDiffuse; uniform sampler2D tMask; uniform float time, wet, rain;
     varying vec4 vUv; varying vec2 vUv0; varying vec3 vWorld;
 
     float h21(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
@@ -44,9 +45,10 @@ export const WetShader = {
     }
 
     void main() {
-      float mask = texture2D(tMask, vUv0).r;
-      float puddle = smoothstep(0.55, 0.9, mask);
-      vec2 rp = rippleField(vWorld.xz, time);
+      float m0 = texture2D(tMask, vUv0).r;
+      float mask = m0 * wet;
+      float puddle = smoothstep(0.55, 0.9, m0) * smoothstep(0.0, 0.7, wet);
+      vec2 rp = rain > 0.001 ? rippleField(vWorld.xz, time) * rain : vec2(0.0);
       vec4 base = vUv;
       vec2 rpc = rp / max(1.0, length(rp));
       base.xy += rpc * (0.003 + 0.007 * puddle) * base.w;

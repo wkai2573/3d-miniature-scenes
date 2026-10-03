@@ -4,6 +4,7 @@ import { scene, U, ticks } from '../../engine/context.js';
 import { renderer, resize, render } from '../../engine/renderer.js';
 import { loadFonts } from '../../engine/canvas.js';
 import { staticBatch } from '../../engine/batch.js';
+import { weatherSurfaces } from '../../engine/surface.js';
 import { setupKonbini } from './setup.js';
 import { buildBase } from './base.js';
 import { buildStoreExterior } from './storeExterior.js';
@@ -31,6 +32,7 @@ buildWeather({ lampPositions });
 buildSound();
 
 staticBatch(scene);
+weatherSurfaces(scene, { x: [-14, 14], z: [-14, 14] });   // 積雪；路面的濕潤由濕地反射負責
 
 const clock = new THREE.Clock();
 function frame() {

@@ -1,9 +1,11 @@
-// 秋夜的聲音
+// 紅葉屋的聲音
 // 錄音：樹葉的沙沙聲鋪底；陣風時枯葉被捲起的聲音跟著畫面的陣風起落；秋蟲在陣風一來就停，風過了幾秒才慢慢再叫
+//       秋蟲只在晴朗的夜裡叫；下雨時鋪上雨聲（借用便利商店的錄音），下雪時樹葉聲也變小
 //       小瀑布、露天風呂的湯口、蹲踞的細流都放在實際位置，拉近才聽得清楚
 // 合成（跟畫面同步）：鹿威し倒水，以及竹筒回彈敲在石頭上的「コーン」，帶一點庭園的回音
 // 音檔來源與授權見 assets/audio/CREDITS.md
 import { ambience } from '../../engine/audio.js';
+import { ENV } from '../../engine/env.js';
 import { W } from './wind.js';
 import { LV, FALL, ONSEN, TSUKUBAI } from './layout.js';
 import { heightAt, wallUpZ } from './terrain.js';
@@ -15,11 +17,14 @@ export function buildSound() {
     crickets: 'assets/audio/ryokan/crickets.mp3',
     waterfall: 'assets/audio/ryokan/waterfall.mp3',
     trickle: 'assets/audio/ryokan/trickle.mp3',
+    rain: 'assets/audio/konbini/rain.mp3',
   }, (A, B) => {
-    const CALM = 0.68, BUGS = 0.14;
+    const CALM = 0.68, BUGS = 0.14, RAIN = 0.5;
+    const bugsNow = () => BUGS * (1 - ENV.day) * (1 - Math.max(ENV.rain, ENV.snow));
     const calm = A.bed(B.leaves, { gain: CALM, seg: [10, 18], xf: 3 });
     const strong = A.bed(B.gust, { gain: 0, seg: [7, 11], xf: 2 });
-    const bugs = A.bed(B.crickets, { gain: BUGS, seg: [8, 14], xf: 3 });
+    const bugs = A.bed(B.crickets, { gain: bugsNow(), seg: [8, 14], xf: 3 });
+    const rain = A.bed(B.rain, { gain: RAIN * ENV.rain, seg: [9, 16], xf: 3 });
 
     A.bed(B.waterfall, { gain: 0.85, dest: A.spot(FALL.x, LV.water + 0.6, wallUpZ(FALL.x) + 0.62, { ref: 9 }) });
     A.bed(B.trickle, { gain: 0.55, dest: A.spot(ONSEN.cx + ONSEN.rx - 0.47, LV.up + 0.5, ONSEN.cz - 0.54, { ref: 4 }) });
@@ -30,10 +35,11 @@ export function buildSound() {
     A.tick(() => {
       const g = W.gust.value, t = A.ctx.currentTime;
       strong.gain.setTargetAtTime(g * 0.85, t, 0.12);
-      calm.gain.setTargetAtTime(CALM * (1 + g * 0.6), t, 0.25);
+      calm.gain.setTargetAtTime(CALM * (1 + g * 0.6) * (1 - 0.45 * ENV.snow), t, 0.25);
+      rain.gain.setTargetAtTime(RAIN * ENV.rain, t, 0.5);
       if (g > 0.15) hush = t + 3.5;
       const quiet = t < hush;
-      bugs.gain.setTargetAtTime(quiet ? 0 : BUGS, t, quiet ? 0.4 : 2.5);
+      bugs.gain.setTargetAtTime(quiet ? 0 : bugsNow(), t, quiet ? 0.4 : 2.5);
     });
 
     A.on('pour', (px, py, pz) => A.play(B.trickle, {
