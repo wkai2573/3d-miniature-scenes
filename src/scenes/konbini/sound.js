@@ -5,6 +5,7 @@
 // 音檔來源與授權見 assets/audio/CREDITS.md
 import { ambience } from '../../engine/audio.js';
 import { ENV } from '../../engine/env.js';
+import { autoDoor } from './storeExterior.js';
 
 const DOOR = [2.2, 1.4, 1.15];
 const VEND = [4.7, 1.0, -4.7];
@@ -28,9 +29,19 @@ export function buildSound() {
       city.gain.setTargetAtTime(CITY * ENV.day * (1 - 0.6 * ENV.snow), t, 1.2);
     });
     const store = storeAir(A);
+    // 店內的聲音隔著玻璃只剩低頻；跟著自動門打開的程度，濾波器打開、聲音變亮
+    let doorK = -1;
+    A.tick(() => {
+      const t = A.ctx.currentTime, k = autoDoor.open;
+      if (k === doorK) return;   // 門沒有在動就不用再排程
+      doorK = k;
+      store.lp.frequency.setTargetAtTime(380 * (2200 / 380) ** k, t, 0.15);
+      store.g.gain.setTargetAtTime(0.04 + 0.05 * k, t, 0.15);
+    });
     hum(A);
     A.on('drip', (x, z) => plip(A, x, z));
-    A.on('door', () => door(A, store));
+    A.on('door', () => doorOpen(A));
+    A.on('doorClose', () => doorClose(A));
     A.on('flicker', (x, y, z, dur) => buzz(A, x, y, z, dur));
   });
 }
@@ -54,21 +65,24 @@ function plip(A, x, z) {
   o.onended = () => p.disconnect();
 }
 
-// 自動門：馬達與門片滑開、兩秒多後再關上；有一半的機會響起入店鈴。門開著的時候，店裡的聲音透出來
-function door(A, store) {
+// 自動門打開：馬達與門片滑開，有一半的機會響起入店鈴
+function doorOpen(A) {
   const { ctx } = A, t = ctx.currentTime + 0.02;
   const p = A.spot(...DOOR, { ref: 6, verb: 0.12 });
   slide(A, p, t, 0.8);
-  slide(A, p, t + 3.2, 0.9);
   if (Math.random() < 0.5) {
     bell(A, p, 659.3, t + 0.3);          // 叮
     bell(A, p, 523.3, t + 0.85);         // 咚
   }
-  store.lp.frequency.setTargetAtTime(2200, t, 0.3);
-  store.g.gain.setTargetAtTime(0.09, t, 0.3);
-  store.lp.frequency.setTargetAtTime(380, t + 3.3, 0.35);
-  store.g.gain.setTargetAtTime(0.04, t + 3.3, 0.35);
-  setTimeout(() => p.disconnect(), 6000);
+  setTimeout(() => p.disconnect(), 4000);
+}
+
+// 自動門關上：門片滑回來
+function doorClose(A) {
+  const { ctx } = A, t = ctx.currentTime + 0.02;
+  const p = A.spot(...DOOR, { ref: 6, verb: 0.12 });
+  slide(A, p, t, 0.9);
+  setTimeout(() => p.disconnect(), 2000);
 }
 
 function slide(A, dest, t, d) {
@@ -105,7 +119,7 @@ function bell(A, dest, f, t) {
   }
 }
 
-// 店裡的空調與日光燈低鳴，隔著玻璃只剩低頻；門打開時濾波器打開、聲音變亮
+// 店裡的空調與日光燈低鳴，隔著玻璃只剩低頻
 function storeAir(A) {
   const { ctx } = A;
   const lp = ctx.createBiquadFilter();
