@@ -10,7 +10,7 @@ if (nav) initMenu(nav);
 
 function initMenu(nav) {
   const current = SCENES.find(s => s.id === nav.dataset.current) ?? SCENES[0];
-  const keys = wasdFree(current);   // 場景用 WASD 操作角色時，天氣與聲音只能用滑鼠
+  const keys = wasdFree(current);   // 場景用 WASD 操作少女時，天氣與聲音只能用滑鼠
   const no = s => 'No.' + String(SCENES.indexOf(s) + 1).padStart(2, '0');
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 

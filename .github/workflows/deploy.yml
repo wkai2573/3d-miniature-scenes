@@ -31,6 +31,7 @@ jobs:
         run: |
           mkdir _site
           cp -r index.html girl.html ryokan.html css src assets _site/
+          find _site -name '*.test.js' -delete   # 測試只在本機用 bun 執行，不上線
 
       - uses: actions/configure-pages@v6
 

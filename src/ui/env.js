@@ -1,6 +1,6 @@
 // 畫面下方的時間與天氣面板：三個天氣按鈕（晴、雨、雪）與時間滑桿，拖動時畫面立刻跟著變，太陽、月亮也沿著天空移動。
 // 狀態在 src/engine/env.js，兩邊用事件溝通；場景沒有使用時間與天氣時面板不會出現。
-// 鍵盤：W 切換天氣（場景用 WASD 操作角色時沒有）、← → 每次調一小時（焦點在滑桿上時改由滑桿處理，每次 5 分鐘）。
+// 鍵盤：W 切換天氣（場景用 WASD 操作少女時沒有）、← → 每次調一小時（焦點在滑桿上時改由滑桿處理，每次 5 分鐘）。
 import { wasdFree } from './scenes.js';
 
 const svg = body => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;

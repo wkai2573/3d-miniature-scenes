@@ -1,7 +1,7 @@
 // 場景目錄：選單卡片與轉場布幕都讀這份清單。
 // 新增場景時在這裡加一筆，並在新頁面放上 <nav id="scene-menu" data-current="場景 id">。
 // accent 是選單與布幕上的強調色；veil 是轉場布幕的漸層（外圈、中心）。
-// usesWasd：這個場景用 WASD 操作角色，天氣（W）與聲音（S）的快捷鍵就不綁定。
+// usesWasd：這個場景用 WASD 操作少女，天氣（W）與聲音（S）的快捷鍵就不綁定。
 export const SCENES = [
   {
     id: 'konbini',
@@ -41,5 +41,5 @@ export const SCENES = [
   },
 ];
 
-/** 這個場景有沒有留 W（切換天氣）與 S（開關聲音）給選單：用 WASD 操作角色的場景沒有 */
+/** 這個場景有沒有留 W（切換天氣）與 S（開關聲音）給選單：用 WASD 操作少女的場景沒有 */
 export const wasdFree = scene => !scene.usesWasd;
