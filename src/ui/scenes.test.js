@@ -39,6 +39,7 @@ describe('場景目錄', () => {
     }
     expect(isCopied('src/scenes/girl/main.js')).toBe(true);
     expect(isCopied('css/style.css')).toBe(true);
+    expect(isCopied('assets/characters/three-vrm-girl.vrm')).toBe(true);
   });
 
   test('只有少女場景宣告佔用 WASD', () => {

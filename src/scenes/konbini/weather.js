@@ -8,7 +8,7 @@ import { tmp } from '../../engine/geometry.js';
 import { cue } from '../../engine/audio.js';
 import { ENV, EU } from '../../engine/env.js';
 import { buildRain, buildSnow } from '../../engine/precip.js';
-import { shelter } from './shelter.js';
+import { shelter } from '../girl/shelter.js';
 
 const underRoof = (x, z) => x > -6.7 && x < 5.2 && z > -6.3 && z < 2.45;   // 店內與雨棚下不下雨、不下雪
 

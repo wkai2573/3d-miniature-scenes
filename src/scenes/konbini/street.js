@@ -8,7 +8,7 @@ import { toon, glow } from '../../engine/materials.js';
 import { G, add, box, cyl, plane, rod, grp } from '../../engine/geometry.js';
 import { bicycle } from './props.js';
 import { cue } from '../../engine/audio.js';
-import { happen } from './events.js';
+import { happen } from '../girl/events.js';
 import { ENV, nightColor, nightGlow, nightLight } from '../../engine/env.js';
 
 // 回傳路燈位置，給雨絲 shader 做打光

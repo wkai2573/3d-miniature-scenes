@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { PI, onTick } from '../../engine/context.js';
 import { canvasTex } from '../../engine/canvas.js';
 import { toon } from '../../engine/materials.js';
-import { happen } from './events.js';
+import { happen } from '../girl/events.js';
 import { G, box, cyl, plane, rod, grp } from '../../engine/geometry.js';
 
 function sigMat(color, map = null) {

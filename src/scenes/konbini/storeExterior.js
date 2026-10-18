@@ -12,7 +12,7 @@ import { glassPane } from './shaders/glass.js';
 import { acUnit } from './props.js';
 import { WALL, FRAME, KICK, CANOPY, CORAL, MUSTARD, TEAL, CREAM } from './palette.js';
 import { cue } from '../../engine/audio.js';
-import { happen } from './events.js';
+import { happen } from '../girl/events.js';
 import { nightGlow } from '../../engine/env.js';
 
 export function buildStoreExterior() {
