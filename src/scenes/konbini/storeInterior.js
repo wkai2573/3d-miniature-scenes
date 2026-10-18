@@ -15,6 +15,7 @@ const FL = 0.12;   // 店內地板高度
 const SNACK = ['#e94f37', '#f6ae2d', '#2e86ab', '#7dc95e', '#f25f5c', '#ffe066', '#9b5de5', '#f15bb5', '#00bbf9', '#ff9f1c', '#e4572e', '#4ecdc4', '#fdfcdc'];
 
 export function buildStoreInterior({ nightInterior = 1 } = {}) {
+  nightInterior = Math.min(1, Math.max(0.05, nightInterior));   // 太小的值 1 / nightInterior 會爆掉
   const IN = new THREE.Group();
   scene.add(IN);
   const unitBox = new THREE.BoxGeometry(1, 1, 1);
