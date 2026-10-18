@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { scene, PI, onTick } from '../../engine/context.js';
 import { pLight } from '../../engine/lights.js';
+import { nightLight } from '../../engine/env.js';
 import { rand, pick } from '../../engine/random.js';
 import { canvasTex, rr, txt } from '../../engine/canvas.js';
 import { drawBird } from './brand.js';
@@ -13,7 +14,7 @@ import { FRAME, CORAL, MUSTARD, TEAL } from './palette.js';
 const FL = 0.12;   // 店內地板高度
 const SNACK = ['#e94f37', '#f6ae2d', '#2e86ab', '#7dc95e', '#f25f5c', '#ffe066', '#9b5de5', '#f15bb5', '#00bbf9', '#ff9f1c', '#e4572e', '#4ecdc4', '#fdfcdc'];
 
-export function buildStoreInterior() {
+export function buildStoreInterior({ nightInterior = 1 } = {}) {
   const IN = new THREE.Group();
   scene.add(IN);
   const unitBox = new THREE.BoxGeometry(1, 1, 1);
@@ -21,9 +22,12 @@ export function buildStoreInterior() {
   const productLit = new THREE.MeshBasicMaterial({ color: 0xd6d6d6 });
   const items = (geo, mat, list) => inst(geo, mat, list, IN);
 
-  pLight('#ffd7a3', 30, -3.4, 2.8, -3.0, 8);
-  pLight('#ffd7a3', 30, 0.6, 2.8, -3.0, 8);
-  pLight('#ffe2b8', 22, -1.6, 2.7, -0.2, 7);
+  // 店內的燈光。nightInterior 小於 1 時夜晚壓低（夜晚泛光的門檻低，太亮會整片泛白），白天維持原本的亮度
+  // nightLight 的 dayK 是白天保留的比例，大於 1 就是白天比夜晚亮：夜晚是 nightInterior 倍、白天是原本的 1 倍
+  for (const [color, power, x, y, z, range] of [['#ffd7a3', 30, -3.4, 2.8, -3.0, 8], ['#ffd7a3', 30, 0.6, 2.8, -3.0, 8], ['#ffe2b8', 22, -1.6, 2.7, -0.2, 7]]) {
+    const light = pLight(color, power * nightInterior, x, y, z, range);
+    if (nightInterior < 1) nightLight(light, 1 / nightInterior);
+  }
 
   // ---- 天花板與燈 ----
   box(9.6, 0.05, 6.6, '#f3eee4', -1, 2.98, -2.5, { outline: false });
