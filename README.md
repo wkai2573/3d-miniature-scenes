@@ -1,18 +1,19 @@
 # 3D 微縮場景
 
-用 three.js 手工建模的日式微縮場景集，預設是夜景，也可以切換晴、雨、雪，或把時間拖到清晨、正午、黃昏。所有模型、貼圖和動畫都由程式產生，沒有外部模型檔；也不需要建置步驟或安裝套件，開一個本機伺服器就能看。
+用 three.js 手工建模的日式微縮場景集，預設是夜景，也可以切換晴、雨、雪，或把時間拖到清晨、正午、黃昏。場景裡的模型、貼圖和動畫都由程式產生，只有少女場景的人物使用外部的 VRM 模型檔（授權見 [assets/characters/CREDITS.md](assets/characters/CREDITS.md)）；不需要建置步驟或安裝套件，開一個本機伺服器就能看。
 
 **線上版：https://wkai2573.github.io/3d-miniature-scenes/**
 
-| 雨夜のことりマート | 秋夜の紅葉屋 |
-|---|---|
-| ![雨夜のことりマート](assets/thumbs/konbini.jpg) | ![秋夜の紅葉屋](assets/thumbs/ryokan.jpg) |
+| 雨夜のことりマート | 雨夜のことりマート・傘の少女 | 秋夜の紅葉屋 |
+|---|---|---|
+| ![雨夜のことりマート](assets/thumbs/konbini.jpg) | ![雨夜のことりマート・傘の少女](assets/thumbs/girl.jpg) | ![秋夜の紅葉屋](assets/thumbs/ryokan.jpg) |
 
 ## 場景
 
 | 場景 | 頁面 | 風格 | 內容 |
 |---|---|---|---|
 | 雨夜のことりマート | `index.html` | 三渲二（toon 著色＋描邊） | 深夜下雨的街角便利商店。雨絲與地面水花、帶雨痕的玻璃、濕路面倒影、依週期輪替的紅綠燈，店內有貨架、關東煮和咖啡機 |
+| 雨夜のことりマート・傘の少女 | `girl.html` | 三渲二（同雨夜のことりマート） | 同一條街景、同樣的天氣與聲音，加上一位由玩家操作的少女：露天自動撐開透明傘，走進雨棚下或店內就收起來，靠近自動門時門會打開，撐開的傘擋得住雨雪。第一次載入要下載約 5.3 MB 的人物模型；模型載入失敗時場景照常顯示，只是沒有少女 |
 | 秋夜の紅葉屋 | `ryokan.html` | 柔和低多邊形＋SSAO | 浮在晚秋夜空中的溫泉旅館浮島。後山、台地、庭園、參道四層高低差，五裂楓葉樹冠、陣風與落葉模擬、池塘倒影與漣漪、露天風呂的湯けむり、月亮與雲海 |
 
 ## 時間與天氣
@@ -21,7 +22,7 @@
 
 | | 雨夜のことりマート | 秋夜の紅葉屋 |
 |---|---|---|
-| 開場 | 23:00、雨 | 20:00、晴 |
+| 開場 | 23:00、雨，少女場景也是 | 20:00、晴 |
 | 天亮時 | 路燈、公寓的窗燈與走廊燈熄滅，便利商店照常營業 | 障子、行燈、石燈籠與地上的光斑熄滅，螢火消失 |
 | 雨 | 雨絲、地面水花、屋簷滴水、濕路面倒影、玻璃上的雨痕 | 雨絲（靠近燈籠時染成暖色）、泥地、砂地與飛石上的水花、池面與溫泉的雨滴波紋、露天的地面變暗 |
 | 雪 | 雪花飄落，屋頂、路面、圍牆頂慢慢積雪 | 雪花隨陣風斜飄，屋頂、樹冠、庭園慢慢積雪 |
@@ -32,11 +33,11 @@
 
 ## 環境音
 
-兩個場景都有環境音，預設開啟。瀏覽器規定要等使用者互動才能出聲，所以第一次點一下畫面（或按任何鍵）之後才會開始播放。點右上角的聲音按鈕會展開小面板，可以開關環境音、用滑桿調整音量百分比；開關與音量都會記住。
+三個場景都有環境音，預設開啟。瀏覽器規定要等使用者互動才能出聲，所以第一次點一下畫面（或按任何鍵）之後才會開始播放。點右上角的聲音按鈕會展開小面板，可以開關環境音、用滑桿調整音量百分比；開關與音量都會記住。
 
 | 場景 | 鋪底（錄音） | 跟畫面同步的聲音 |
 |---|---|---|
-| 雨夜のことりマート | 雨聲、雨棚下的滴水與排水溝（跟著雨量）、晴朗夜裡的秋蟲 | 屋簷水滴落進水窪、自動門開關與入店鈴、招牌與路燈閃爍時的電流聲、白天遠處市街的低鳴 |
+| 雨夜のことりマート與少女場景 | 雨聲、雨棚下的滴水與排水溝（跟著雨量）、晴朗夜裡的秋蟲 | 屋簷水滴落進水窪、自動門開關與入店鈴、店裡透出的聲音（隨自動門開啟的程度變亮變大聲）、招牌與路燈閃爍時的電流聲、白天遠處市街的低鳴 |
 | 秋夜の紅葉屋 | 樹葉的沙沙聲、秋蟲（只在晴朗的夜裡）、雨聲（下雨時） | 陣風時枯葉被捲起、秋蟲在陣風時停下；鹿威し倒水與敲擊聲；小瀑布、湯口、蹲踞的水聲 |
 
 聲音都放在場景裡的實際位置：拉近店門口、池塘或蹲踞，那裡的聲音會變清楚，轉動視角時左右聲道也會跟著換。錄音都是 CC0 授權，來源見 [assets/audio/CREDITS.md](assets/audio/CREDITS.md)；其餘的聲音是在瀏覽器裡即時合成的。
@@ -52,6 +53,7 @@ bun start
 然後用瀏覽器開啟：
 
 - 雨夜のことりマート：http://localhost:5173
+- 雨夜のことりマート・傘の少女：http://localhost:5173/girl.html
 - 秋夜の紅葉屋：http://localhost:5173/ryokan.html
 
 不需要 `bun install`：伺服器是零相依的 [server.mjs](server.mjs)，three.js 由 import map 從 CDN 載入。
@@ -69,7 +71,7 @@ $env:PORT=8080; bun start      # PowerShell
 
 推送到 `main` 時，GitHub Actions（[deploy.yml](.github/workflows/deploy.yml)）會自動把網站部署到 GitHub Pages，大約一分鐘後生效。也可以在 repo 的 Actions 頁面手動執行「部署到 GitHub Pages」。
 
-- 只會上傳 `index.html`、`ryokan.html`、`css/`、`src/`、`assets/`；`server.mjs`、`package.json` 和 README 不會出現在網站上。
+- 只會上傳 `index.html`、`girl.html`、`ryokan.html`、`css/`、`src/`、`assets/`；`server.mjs`、`package.json` 和 README 不會出現在網站上。
 - 所有路徑都是相對路徑，所以網站放在 `/3d-miniature-scenes/` 子路徑下也能正常運作。新增檔案時請不要用 `/` 開頭的絕對路徑。
 - 新增場景的頁面或資料夾，如果不在上面列出的位置，要一併加進 workflow 的「整理網站檔案」步驟。
 
@@ -85,11 +87,21 @@ $env:PORT=8080; bun start      # PowerShell
 | `↑` `↓` | 選單開啟時在卡片間移動 |
 | `Esc` | 關閉選單 |
 | 右上角的聲音按鈕 | 展開面板：開關環境音、調整音量（0–100%） |
-| `S` | 開關環境音 |
+| `S` | 開關環境音（少女場景沒有，見下） |
 | `−` `＋` | 音量每次調 10% |
 | 下方的天氣按鈕與時間滑桿 | 切換晴、雨、雪；拖動調整時間（焦點在滑桿上時方向鍵每次 5 分鐘） |
-| `W` | 依序切換晴、雨、雪 |
+| `W` | 依序切換晴、雨、雪（少女場景沒有，見下） |
 | `←` `→` | 時間每次調 1 小時 |
+
+### 少女場景
+
+少女場景用 WASD 操作少女，所以 `W`（切換天氣）與 `S`（開關環境音）在這個場景沒有作用，說明列也不顯示；天氣與聲音改用滑鼠操作面板，方向鍵調整時間照舊。
+
+| 動作 | 效果 |
+|---|---|
+| `W` `A` `S` `D` | 少女前後左右移動，方向依相機的朝向 |
+| 按住 `Shift` | 跑步 |
+| `C` | 在俯瞰視角與跟拍視角之間切換；跟拍視角貼在少女背後，可以拖曳旋轉，會自己避開牆壁 |
 
 - 系統開啟「減少動態效果」時，雨絲、雪花和落葉的數量會減少，部分飄動效果停用，轉場布幕改成簡短的淡入淡出。
 - 在紅葉屋的網址後面加上 `#noao`（`ryokan.html#noao`）可以關閉 SSAO，方便在較弱的顯示卡上比較效能。
@@ -98,6 +110,7 @@ $env:PORT=8080; bun start      # PowerShell
 
 ```
 index.html              雨夜のことりマート（預設頁）
+girl.html               雨夜のことりマート・傘の少女
 ryokan.html             秋夜の紅葉屋
 server.mjs              零相依的本機靜態伺服器（Bun）
 .github/workflows/      推送 main 時自動部署到 GitHub Pages
@@ -106,12 +119,14 @@ css/
   menu.css              場景選單、聲音按鈕與轉場布幕
 assets/
   thumbs/               選單卡片縮圖（640 × 400）
+  characters/           少女的 VRM 模型（授權見 CREDITS.md）
   audio/                環境音錄音（來源與授權見 CREDITS.md）
 src/
   boot.js               一般腳本，比模組先執行；載入失敗時把原因顯示在畫面上
-  engine/               兩個場景共用的引擎
+  engine/               各場景共用的引擎
   ui/                   場景選單、轉場布幕、場景目錄
-  scenes/konbini/       雨夜のことりマート
+  scenes/konbini/       雨夜のことりマート，共用的街景建立流程在 scene.js
+  scenes/girl/          少女場景：少女的行為、外觀、相機與測試，入口 main.js 呼叫便利商店的建立流程再加上少女
   scenes/ryokan/        秋夜の紅葉屋
 ```
 
@@ -136,7 +151,7 @@ src/
 
 ### 場景選單（`src/ui/`）
 
-- [scenes.js](src/ui/scenes.js)：場景目錄，選單卡片與轉場布幕都讀這份清單。
+- [scenes.js](src/ui/scenes.js)：場景目錄，選單卡片與轉場布幕都讀這份清單；`usesWasd` 宣告場景是否用 WASD 操作角色，是的話 W、S 快捷鍵就不綁定。
 - [menu.js](src/ui/menu.js)：左上角的選單按鈕與場景卡片。
 - [sound.js](src/ui/sound.js)：右上角的聲音按鈕與音量面板，透過事件和 [audio.js](src/engine/audio.js) 溝通。
 - [env.js](src/ui/env.js)：下方的天氣按鈕與時間滑桿，透過事件（`env:set`、`env:state`）和 [src/engine/env.js](src/engine/env.js) 溝通。
@@ -144,7 +159,7 @@ src/
 
 ## 技術重點
 
-- **無建置流程**：原生 ES 模組，three.js r160 透過 import map 從 jsDelivr 載入。
+- **無建置流程**：原生 ES 模組，three.js r160 透過 import map 從 jsDelivr 載入。少女場景的頁面另外載入 pixiv 的 [three-vrm](https://github.com/pixiv/three-vrm) 2.1.0（MIT 授權）來讀 VRM 模型，模型與套件的授權來源記在 [assets/characters/CREDITS.md](assets/characters/CREDITS.md)；套件與模型是動態匯入，載入失敗時只會沒有少女。
 - **後製流程**：HalfFloat 緩衝 →（SSAO）→ 清除 NaN → Bloom → 色調映射 →（暗角）→ FXAA。刻意不用 MSAA 緩衝，因為在 Windows 的 D3D11 下，MSAA HalfFloat 加上 Bloom 會讓整個畫面變黑。
 - **圖層 1**：透明與自發光的物件放在圖層 1，不進 SSAO 的法線 pass，避免水面、燈火出現錯誤的遮蔽。
 - **紅葉屋的地形**：[terrain.js](src/scenes/ryokan/terrain.js) 的 `heightAt(x, z)` 是純函式，建模、擺放物件和落葉模擬都用它查地面高度。主屋、溫泉這類模組先在平地上蓋好，再用 `onLevel()` 整組抬上台地。
@@ -156,14 +171,15 @@ src/
 
 ## 新增場景
 
-1. 在 `src/scenes/<id>/` 建立場景模組。`main.js` 先呼叫 `setupRenderer()`，搭建完成、畫出第一格後設定 `window.__sceneStarted = true`，並送出 `scene:ready` 事件（可參考現有兩個場景的 `main.js`）。
-2. 複製 [ryokan.html](ryokan.html) 成新頁面，修改 `<title>`、`<nav id="scene-menu" data-current="<id>">` 與最後一行的 `main.js` 路徑。
-3. 在 [src/ui/scenes.js](src/ui/scenes.js) 加一筆資料：`id`、`href`、`title`、`desc`、`when`、`style`、`thumb`、`accent`（強調色）、`veil`（轉場布幕的外圈與中心色）。
+1. 在 `src/scenes/<id>/` 建立場景模組。`main.js` 先呼叫 `setupRenderer()`，搭建完成、畫出第一格後設定 `window.__sceneStarted = true`，並送出 `scene:ready` 事件，可參考紅葉屋的 `main.js`。要沿用便利商店的街景時，改成呼叫 [src/scenes/konbini/scene.js](src/scenes/konbini/scene.js) 的 `buildKonbiniScene()`，它已經包含這些步驟，少女場景的 `main.js` 就是這樣做的。
+2. 複製 [ryokan.html](ryokan.html) 成新頁面，修改 `<title>`、`<nav id="scene-menu" data-current="<id>">` 與最後一行的 `main.js` 路徑；頁面檔名要加進 [deploy.yml](.github/workflows/deploy.yml)「整理網站檔案」步驟的複製清單。
+3. 在 [src/ui/scenes.js](src/ui/scenes.js) 加一筆資料：`id`、`href`、`title`、`desc`、`when`、`style`、`thumb`、`accent`（強調色）、`veil`（轉場布幕的外圈與中心色）、`usesWasd`（用 WASD 操作角色就設為 `true`，W、S 快捷鍵會讓出來）。順序就是選單與數字鍵的順序。
 4. 放一張 640 × 400 的縮圖到 `assets/thumbs/`。
-5. （選用）加上時間與天氣：在 setup 裡呼叫 `initEnv()` 與 `setupSky()`（傳入四組調色盤），用 `buildRain()`、`buildSnow()` 加上雨雪，`staticBatch()` 之後呼叫 `weatherSurfaces()` 讓地面積雪；天亮該熄的燈用 `nightGlow()`、`nightLight()` 包起來。可參考現有兩個場景的 `setup.js`。
-6. （選用）加上環境音：參考現有場景的 `sound.js`，用 `ambience()` 註冊音檔與合成音效，音檔放在 `assets/audio/<id>/`，並把來源寫進 [CREDITS.md](assets/audio/CREDITS.md)。
+5. 執行 `bun test`：[src/ui/scenes.test.js](src/ui/scenes.test.js) 會檢查場景目錄、頁面檔、縮圖與部署清單是否一致，漏改任何一處都會失敗。
+6. （選用）加上時間與天氣：在 setup 裡呼叫 `initEnv()` 與 `setupSky()`（傳入四組調色盤），用 `buildRain()`、`buildSnow()` 加上雨雪，`staticBatch()` 之後呼叫 `weatherSurfaces()` 讓地面積雪；天亮該熄的燈用 `nightGlow()`、`nightLight()` 包起來。可參考現有場景的 `setup.js`。
+7. （選用）加上環境音：參考現有場景的 `sound.js`，用 `ambience()` 註冊音檔與合成音效，音檔放在 `assets/audio/<id>/`，並把來源寫進 [CREDITS.md](assets/audio/CREDITS.md)。
 
-貼圖上會畫到的日文字元要加進該場景 `main.js` 的 `GLYPHS`，字型才會預先載入。
+貼圖上會畫到的日文字元要加進該場景 `main.js` 的 `GLYPHS`，字型才會預先載入；便利商店與少女場景共用的 `GLYPHS` 在 [scene.js](src/scenes/konbini/scene.js)。
 
 ## 瀏覽器需求
 
