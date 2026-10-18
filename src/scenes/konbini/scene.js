@@ -20,17 +20,13 @@ import { buildSound } from './sound.js';
 const GLYPHS = 'ことりマート止まれおでん全品円秋の新作焼きいもつめた〜あっか飲み物にぎ・弁当菓子カップ麺日用料らげ肉コロケフェ'
   + 'しゃせえるごびペボル月見荘町内会知ゴミ出祭回覧板防災訓練丁目星野アイス駐輪場発売す営業中時間車台ホナクスッ増量二一曜願で';
 
-/**
- * options.nightInterior：夜間店內燈光相對原本的亮度，1 是原本的樣子；小於 1 時夜晚的店內燈光壓暗、商品改為受光材質
- * （白天的燈光亮度不變）
- */
-export async function buildKonbiniScene({ nightInterior = 1 } = {}) {
+export async function buildKonbiniScene() {
   setupKonbini();
   await loadFonts(GLYPHS);
 
   buildBase();
   buildStoreExterior();
-  buildStoreInterior({ nightInterior });
+  buildStoreInterior();
   const { lampPositions } = buildStreet();
   buildTraffic();
   buildBuildings();
