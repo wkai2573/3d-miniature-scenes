@@ -144,8 +144,21 @@ export function resize() {
   for (const f of resizeHooks) f(w, h);
 }
 
+/**
+ * 在背景預先編譯物件的材質，之後加入場景時不會卡頓。
+ * 場景先畫進後製的緩衝區，色調映射與色彩空間和直接畫到畫面不同，著色器版本也不同；
+ * 編譯時要指定同一個緩衝區，編出來的才用得上。
+ */
+export function precompile(object) {
+  const prev = renderer.getRenderTarget();
+  renderer.setRenderTarget(composer.renderTarget1);
+  const ready = renderer.compileAsync(object, camera, scene);
+  renderer.setRenderTarget(prev);
+  return ready;
+}
+
 export function render() {
-  if (clampBox) {   // 平移不超出底座
+  if (clampBox && controls.enabled) {   // 平移不超出底座；操作控制被停用（跟拍視角自己管相機）時不夾
     const tg = controls.target, C = THREE.MathUtils.clamp;
     tg.set(C(tg.x, ...clampBox.x), C(tg.y, ...clampBox.y), C(tg.z, ...clampBox.z));
   }

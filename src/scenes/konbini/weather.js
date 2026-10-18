@@ -8,13 +8,14 @@ import { tmp } from '../../engine/geometry.js';
 import { cue } from '../../engine/audio.js';
 import { ENV, EU } from '../../engine/env.js';
 import { buildRain, buildSnow } from '../../engine/precip.js';
+import { shelter } from './shelter.js';
 
 const underRoof = (x, z) => x > -6.7 && x < 5.2 && z > -6.3 && z < 2.45;   // 店內與雨棚下不下雨、不下雪
 
 export function buildWeather({ lampPositions }) {
   // 雨絲：GPU 端依時間下落，靠近店門偏暖、靠近路燈偏冷
-  buildRain({ x: [-13.9, 13.9], z: [-13.9, 13.9], y: [0, 15], n: 1250, skip: underRoof, lamps: lampPositions, warm: { at: [-0.8, 1.6, 3.2] } });
-  buildSnow({ x: [-13.9, 13.9], z: [-13.9, 13.9], y: [0, 15], n: 1050, skip: underRoof });
+  buildRain({ x: [-13.9, 13.9], z: [-13.9, 13.9], y: [0, 15], n: 1250, skip: underRoof, lamps: lampPositions, warm: { at: [-0.8, 1.6, 3.2] }, shelter });
+  buildSnow({ x: [-13.9, 13.9], z: [-13.9, 13.9], y: [0, 15], n: 1050, skip: underRoof, shelter });
   buildSplashes();
   buildDrips();
 }

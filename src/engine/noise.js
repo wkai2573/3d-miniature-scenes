@@ -1,5 +1,7 @@
-// 3D value noise：給岩石、島塊側面做自然的凹凸位移
-function hash(x, y, z) {
+// 3D value noise 與整數雜湊：岩石、島塊側面的凹凸位移，以及少女手指的時間切格
+
+/** 三個整數雜湊成 0 ~ 1，相同的輸入一定得到相同的值 */
+export function hash(x, y, z) {
   let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(z, 1440670441);
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   h ^= h >>> 16;

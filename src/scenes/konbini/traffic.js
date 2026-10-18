@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { PI, onTick } from '../../engine/context.js';
 import { canvasTex } from '../../engine/canvas.js';
 import { toon } from '../../engine/materials.js';
+import { happen } from './events.js';
 import { G, box, cyl, plane, rod, grp } from '../../engine/geometry.js';
 
 function sigMat(color, map = null) {
@@ -70,11 +71,17 @@ export function buildTraffic() {
   rod([12.9, 5.0, -12.9], [11.0, 5.0, -12.9], 0.06, '#b5b8bd');
   const flash = vehicleSignal(11.4, 4.75, -12.9, 0, visor);
 
+  // 號誌換燈：店前轉角的行人號誌所在的位置有事發生
+  const CHANGES = [0, 14, 17, 18, 28, 31];
+  let stage = -1;
   onTick(t => {
     const c = t % 32, blink = Math.floor(t * 2) % 2 === 0;
     setLamp(main[0], c < 14); setLamp(main[1], c >= 14 && c < 17); setLamp(main[2], c >= 17);
     const sideG = c >= 18 && c < 28, sideY = c >= 28 && c < 31;
     setLamp(side[0], sideG); setLamp(side[1], sideY); setLamp(side[2], !sideG && !sideY);
+    const now = CHANGES.filter(b => c >= b).length;
+    if (stage >= 0 && now !== stage) happen('signal', 7.47, 2.9, 6.7);   // 座標同 girl/layout.js 的視線焦點
+    stage = now;
     const wsG = c < 11 || (c < 14 && blink);
     for (const s of [walkSideA, walkSideB]) { setLamp(s.green, wsG, 2.2); setLamp(s.red, c >= 14, 2.2); }
     const wmG = (c >= 18 && c < 25) || (c >= 25 && c < 28 && blink);

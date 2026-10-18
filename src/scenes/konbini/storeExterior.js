@@ -12,6 +12,7 @@ import { glassPane } from './shaders/glass.js';
 import { acUnit } from './props.js';
 import { WALL, FRAME, KICK, CANOPY, CORAL, MUSTARD, TEAL, CREAM } from './palette.js';
 import { cue } from '../../engine/audio.js';
+import { happen } from './events.js';
 import { nightGlow } from '../../engine/env.js';
 
 export function buildStoreExterior() {
@@ -68,7 +69,10 @@ export function buildStoreExterior() {
   buildVending();
 }
 
-// ---- 自動門：每 9–16 秒開關一次 ----
+// ---- 自動門：少女靠近時打開並維持開啟；沒有人靠近時每 9–16 秒自己開關一次 ----
+// 少女每格把 wanted 設成門該不該打開，並從 open 讀到門片目前滑開的比例（0 關著、1 全開）；店裡透出來的聲音也跟著 open
+export const autoDoor = { wanted: false, open: 0 };
+
 function buildAutoDoor() {
   const doorL = grp(1.725, 0, 1.02), doorR = grp(2.675, 0, 1.02);
   for (const d of [doorL, doorR]) {
@@ -84,13 +88,24 @@ function buildAutoDoor() {
   box(0.3, 0.06, 0.08, '#20242c', 2.2, 2.56, 1.1, { t: 0.008 });   // 感應器
   box(1.9, 0.02, 0.1, '#9aa0aa', 2.2, 0.12, 1.02, { outline: false });
 
-  let next = 4, t0 = -10;
-  onTick(t => {
-    if (t > next) { t0 = t; next = t + rand(9, 16); cue('door'); }
-    const e = t - t0;
-    let k = 0;
-    if (e < 0.8) k = e / 0.8; else if (e < 3.2) k = 1; else if (e < 4.1) k = 1 - (e - 3.2) / 0.9;
-    k = k * k * (3 - 2 * k);
+  // 沒有人時：花 0.8 秒打開、停到第 3.2 秒，再花 0.9 秒關上
+  // 少女在感應區裡時一直開著，離開後再停 1.5 秒；她在感應區邊上進進出出，門也不會跟著一開一關
+  let next = 4, holdUntil = -1, s = 0, opening = false;
+  onTick((t, dt) => {
+    if (autoDoor.wanted) holdUntil = Math.max(holdUntil, t + 1.5);
+    if (t > next) {
+      next = t + rand(9, 16);
+      if (!autoDoor.wanted) holdUntil = t + 3.2;
+    }
+    const want = t < holdUntil;
+    if (want !== opening) {
+      cue(want ? 'door' : 'doorClose');
+      if (!autoDoor.wanted) happen(want ? 'doorOpen' : 'doorClose', 2.2, 1.4, 1.1);   // 少女自己讓門打開的那一次不算，座標同 girl/layout.js 的視線焦點
+    }
+    opening = want;
+    s = want ? Math.min(1, s + dt / 0.8) : Math.max(0, s - dt / 0.9);
+    const k = s * s * (3 - 2 * s);
+    autoDoor.open = k;
     doorL.position.x = baseL - 0.88 * k;
     doorR.position.x = baseR + 0.55 * k;
   });
@@ -157,7 +172,7 @@ function buildSigns() {
     for (const f of flick) {
       let k = 1;
       if (!reduceMotion) {
-        if (t > f.next) { f.end = t + rand(0.25, 0.7); f.next = t + rand(8, 18); cue('flicker', ...f.at, f.end - t); }
+        if (t > f.next) { f.end = t + rand(0.25, 0.7); f.next = t + rand(8, 18); cue('flicker', ...f.at, f.end - t); happen('signFlicker', ...f.at); }
         if (t < f.end) k = Math.sin(t * 57) > 0.25 ? 0.6 : 1;
       }
       f.m.color.setScalar(1.25 * k);
