@@ -1,16 +1,19 @@
 // 右上角的聲音按鈕：點一下展開小面板（開關、音量百分比），播放時四根音量條跳動。
 // 聲音本身在 src/engine/audio.js，兩邊用事件溝通；場景沒載入音訊引擎時按鈕不會出現。
-// 鍵盤：S 開關、− / ＋ 每次調 10%、面板開著時 Esc 關閉。
+// 鍵盤：S 開關（場景用 WASD 操作角色時沒有）、− / ＋ 每次調 10%、面板開著時 Esc 關閉。
+
+import { wasdFree } from './scenes.js';
 
 const TIP = '點一下畫面，播放環境音';
 
 export function initSound(current) {
+  const key = wasdFree(current);   // 有沒有 S 快捷鍵
   const el = document.createElement('div');
   el.className = 'snd';
   el.hidden = true;
   el.style.setProperty('--accent', current.accent);
   el.innerHTML = /* html */`
-    <button class="snd-btn" type="button" aria-expanded="false" aria-controls="snd-panel" aria-label="環境音與音量" title="環境音（S）">
+    <button class="snd-btn" type="button" aria-expanded="false" aria-controls="snd-panel" aria-label="環境音與音量" title="環境音${key ? '（S）' : ''}">
       <span class="snd-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     </button>
     <span class="snd-tip" aria-hidden="true">${TIP}</span>
@@ -23,7 +26,7 @@ export function initSound(current) {
         <input class="snd-range" type="range" min="0" max="100" step="1" value="80" aria-label="音量">
         <output class="snd-pct">80%</output>
       </div>
-      <p class="snd-keys"><span><kbd>S</kbd> 開關</span><span><kbd>−</kbd><kbd>＋</kbd> 音量</span></p>
+      <p class="snd-keys">${key ? '<span><kbd>S</kbd> 開關</span>' : ''}<span><kbd>−</kbd><kbd>＋</kbd> 音量</span></p>
     </div>`;
   document.body.appendChild(el);
 
@@ -46,7 +49,7 @@ export function initSound(current) {
     el.hidden = false;
     el.dataset.state = state;
     sw.setAttribute('aria-checked', String(state !== 'off'));
-    btn.title = (state === 'on' ? '環境音播放中' : state === 'off' ? '環境音已關閉' : '環境音') + '（S）';
+    btn.title = (state === 'on' ? '環境音播放中' : state === 'off' ? '環境音已關閉' : '環境音') + (key ? '（S）' : '');
     if (!dragging) { range.value = volume; paint(volume); }
   });
 
@@ -87,7 +90,7 @@ export function initSound(current) {
     const k = e.key;
     if (k === 'Escape' && open) {
       setOpen(false, el.contains(document.activeElement));
-    } else if ((k === 's' || k === 'S') && !e.repeat) {
+    } else if (key && (k === 's' || k === 'S') && !e.repeat) {
       e.preventDefault();
       dispatchEvent(new Event('sound:toggle'));
     } else if (['-', '_', '=', '+'].includes(k)) {

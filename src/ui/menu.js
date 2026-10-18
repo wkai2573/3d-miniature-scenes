@@ -1,7 +1,7 @@
 // 場景選單：左上角的按鈕展開場景卡片，選了別的場景就交給轉場布幕（src/ui/veil.js）換頁。
 // 鍵盤：M 開關選單、Esc 關閉、數字鍵直接切換、選單開著時上下鍵在卡片間移動。
 // 右上角的聲音按鈕在 sound.js、下方的時間與天氣面板在 env.js，都跟著選單一起出現。
-import { SCENES } from './scenes.js';
+import { SCENES, wasdFree } from './scenes.js';
 import { initSound } from './sound.js';
 import { initEnv } from './env.js';
 
@@ -10,6 +10,7 @@ if (nav) initMenu(nav);
 
 function initMenu(nav) {
   const current = SCENES.find(s => s.id === nav.dataset.current) ?? SCENES[0];
+  const keys = wasdFree(current);   // 場景用 WASD 操作角色時，天氣與聲音只能用滑鼠
   const no = s => 'No.' + String(SCENES.indexOf(s) + 1).padStart(2, '0');
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
@@ -42,7 +43,7 @@ function initMenu(nav) {
           </a>
         </li>`).join('')}
       </ul>
-      <p class="sm-keys"><span><kbd>M</kbd> 開關選單</span><span><kbd>1</kbd>–<kbd>${SCENES.length}</kbd> 切換場景</span><span><kbd>S</kbd> 聲音</span><span><kbd>−</kbd><kbd>＋</kbd> 音量</span><span><kbd>W</kbd> 天氣</span><span><kbd>←</kbd><kbd>→</kbd> 時間</span><span><kbd>Esc</kbd> 關閉</span></p>
+      <p class="sm-keys"><span><kbd>M</kbd> 開關選單</span><span><kbd>1</kbd>–<kbd>${SCENES.length}</kbd> 切換場景</span>${keys ? '<span><kbd>S</kbd> 聲音</span>' : ''}<span><kbd>−</kbd><kbd>＋</kbd> 音量</span>${keys ? '<span><kbd>W</kbd> 天氣</span>' : ''}<span><kbd>←</kbd><kbd>→</kbd> 時間</span><span><kbd>Esc</kbd> 關閉</span></p>
     </div>`;
 
 

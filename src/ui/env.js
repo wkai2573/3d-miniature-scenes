@@ -1,6 +1,7 @@
 // 畫面下方的時間與天氣面板：三個天氣按鈕（晴、雨、雪）與時間滑桿，拖動時畫面立刻跟著變，太陽、月亮也沿著天空移動。
 // 狀態在 src/engine/env.js，兩邊用事件溝通；場景沒有使用時間與天氣時面板不會出現。
-// 鍵盤：W 切換天氣、← → 每次調一小時（焦點在滑桿上時改由滑桿處理，每次 5 分鐘）。
+// 鍵盤：W 切換天氣（場景用 WASD 操作角色時沒有）、← → 每次調一小時（焦點在滑桿上時改由滑桿處理，每次 5 分鐘）。
+import { wasdFree } from './scenes.js';
 
 const svg = body => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 const ICON = {
@@ -25,13 +26,14 @@ function period(h) {
 }
 
 export function initEnv(current) {
+  const key = wasdFree(current);   // 有沒有 W 快捷鍵
   const el = document.createElement('div');
   el.className = 'env';
   el.hidden = true;
   el.style.setProperty('--accent', current.accent);
   el.innerHTML = /* html */`
     <div class="env-weather" role="group" aria-label="天氣">${WEATHER.map(([id, name]) => /* html */`
-      <button class="env-w" type="button" data-w="${id}" aria-pressed="false" title="${name}（W 切換天氣）">${ICON[id]}<span>${name}</span></button>`).join('')}
+      <button class="env-w" type="button" data-w="${id}" aria-pressed="false" title="${name}${key ? '（W 切換天氣）' : ''}">${ICON[id]}<span>${name}</span></button>`).join('')}
     </div>
     <div class="env-time">
       <span class="env-icon" aria-hidden="true"><span class="env-sun">${ICON.clear}</span><span class="env-moon">${ICON.moon}</span></span>
@@ -75,7 +77,7 @@ export function initEnv(current) {
     if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || el.hidden) return;
     if (e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable]')) return;
     const k = e.key;
-    if ((k === 'w' || k === 'W') && !e.repeat) {
+    if (key && (k === 'w' || k === 'W') && !e.repeat) {
       e.preventDefault();
       setWeather(WEATHER[(WEATHER.findIndex(([id]) => id === weather) + 1) % WEATHER.length][0]);
     } else if (k === 'ArrowLeft' || k === 'ArrowRight') {

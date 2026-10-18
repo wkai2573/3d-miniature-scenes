@@ -40,3 +40,6 @@ export const SCENES = [
     usesWasd: false,
   },
 ];
+
+/** 這個場景有沒有留 W（切換天氣）與 S（開關聲音）給選單：用 WASD 操作角色的場景沒有 */
+export const wasdFree = scene => !scene.usesWasd;

@@ -2,7 +2,7 @@
 import { describe, test, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { SCENES } from './scenes.js';
+import { SCENES, wasdFree } from './scenes.js';
 
 const ROOT = join(import.meta.dir, '..', '..');
 const deploy = readFileSync(join(ROOT, '.github/workflows/deploy.yml'), 'utf8');
@@ -44,6 +44,10 @@ describe('場景目錄', () => {
   test('只有少女場景宣告佔用 WASD', () => {
     expect(SCENES.filter(s => s.usesWasd).map(s => s.id)).toEqual(['girl']);
     for (const s of SCENES) expect(typeof s.usesWasd).toBe('boolean');
+  });
+
+  test('W 與 S 只留給不佔用 WASD 的場景', () => {
+    expect(SCENES.filter(wasdFree).map(s => s.id)).toEqual(['konbini', 'ryokan']);
   });
 
   test('每個頁面都標明自己是哪個場景，並載入對應的場景入口', () => {
