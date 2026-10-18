@@ -22,7 +22,7 @@ export const SCENES = [
     desc: '撐著透明傘的少女，走過下著雨的便利商店街角',
     when: '秋・深夜・雨',
     style: '三渲二・可操作',
-    thumb: 'assets/thumbs/konbini.jpg',   // 暫用便利商店的縮圖
+    thumb: 'assets/thumbs/girl.jpg',
     accent: '#8fb8ff',
     veil: ['#070d1c', '#1b2b4c'],
     usesWasd: true,
