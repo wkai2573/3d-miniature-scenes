@@ -18,15 +18,17 @@ export function buildStoreInterior({ nightInterior = 1 } = {}) {
   const IN = new THREE.Group();
   scene.add(IN);
   const unitBox = new THREE.BoxGeometry(1, 1, 1);
-  const productMat = new THREE.MeshToonMaterial({ color: 0xffffff, gradientMap, emissive: 0x2a2016 });
-  const productLit = new THREE.MeshBasicMaterial({ color: 0xd6d6d6 });
+  // 夜間店內壓暗時，商品都用會受店內燈光影響的卡通材質、沒有自發光（有明暗，看起來是被燈照亮的），冷藏櫃裡的飲料也受光，只有櫃子的背板發光
+  const dim = nightInterior < 1;
+  const productMat = new THREE.MeshToonMaterial({ color: 0xffffff, gradientMap, ...(dim ? {} : { emissive: 0x2a2016 }) });
+  const productLit = dim ? productMat : new THREE.MeshBasicMaterial({ color: 0xd6d6d6 });
   const items = (geo, mat, list) => inst(geo, mat, list, IN);
 
   // 店內的燈光。nightInterior 小於 1 時夜晚壓低（夜晚泛光的門檻低，太亮會整片泛白），白天維持原本的亮度
   // nightLight 的 dayK 是白天保留的比例，大於 1 就是白天比夜晚亮：夜晚是 nightInterior 倍、白天是原本的 1 倍
   for (const [color, power, x, y, z, range] of [['#ffd7a3', 30, -3.4, 2.8, -3.0, 8], ['#ffd7a3', 30, 0.6, 2.8, -3.0, 8], ['#ffe2b8', 22, -1.6, 2.7, -0.2, 7]]) {
     const light = pLight(color, power * nightInterior, x, y, z, range);
-    if (nightInterior < 1) nightLight(light, 1 / nightInterior);
+    if (dim) nightLight(light, 1 / nightInterior);
   }
 
   // ---- 天花板與燈 ----
