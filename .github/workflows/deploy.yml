@@ -1,43 +1,64 @@
-# 推送到 main 時自動部署到 GitHub Pages
-# 第一次使用前，要到 repo 的 Settings → Pages，把 Source 設為「GitHub Actions」
-name: 部署到 GitHub Pages
+name: Publish to Hub Worker
 
 on:
   push:
     branches: [main]
-  workflow_dispatch:          # 也可以在 Actions 頁面手動執行
+  workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# 同時只跑一個部署；正在進行的部署不取消，讓它跑完
 concurrency:
-  group: pages
+  group: publish-hub
   cancel-in-progress: false
 
+env:
+  APP_NAME: 3d-miniature-scenes
+  HUB_REPO: ${{ vars.HUB_REPO || 'wkai2573/hub' }}
+
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
 
-      # 只放網頁需要的檔案；server.mjs、package.json、README 不上線
-      - name: 整理網站檔案
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Test
+        run: bun test
+
+      - name: Build
         run: |
-          mkdir _site
-          cp -r index.html girl.html ryokan.html css src assets _site/
-          find _site -name '*.test.js' -delete   # 測試只在本機用 bun 執行，不上線
+          rm -rf dist
+          mkdir -p dist
+          cp -r index.html girl.html ryokan.html css src assets dist/
+          find dist -name '*.test.js' -delete
 
-      - uses: actions/configure-pages@v6
-
-      - uses: actions/upload-pages-artifact@v5
+      - name: Checkout hub repo
+        uses: actions/checkout@v4
         with:
-          path: _site
+          repository: ${{ env.HUB_REPO }}
+          token: ${{ secrets.HUB_PUSH_TOKEN }}
+          path: hub
 
-      - id: deployment
-        uses: actions/deploy-pages@v5
+      - name: Sync dist into hub
+        run: |
+          rm -rf "hub/apps/${APP_NAME}"
+          mkdir -p "hub/apps/${APP_NAME}"
+          cp -r dist/. "hub/apps/${APP_NAME}/"
+
+      - name: Commit & push to hub
+        working-directory: hub
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A "apps/${APP_NAME}"
+          if git diff --cached --quiet; then
+            echo "No changes to publish."
+            exit 0
+          fi
+          git commit -m "deploy(${APP_NAME}): ${GITHUB_REPOSITORY}@${GITHUB_SHA::7}"
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --rebase
+          done
+          exit 1

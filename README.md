@@ -2,7 +2,7 @@
 
 用 three.js 手工建模的日式微縮場景集，預設是夜景，也可以切換晴、雨、雪，或把時間拖到清晨、正午、黃昏。場景裡的模型、貼圖和動畫都由程式產生，只有少女場景的少女使用外部的 VRM 模型檔（授權見 [assets/characters/CREDITS.md](assets/characters/CREDITS.md)）；不需要建置步驟或安裝套件，開一個本機伺服器就能看。
 
-**線上版：https://wkai2573.github.io/3d-miniature-scenes/**
+**線上版：https://hub.ouo1.workers.dev/3d-miniature-scenes/**
 
 | 雨夜のことりマート | 雨夜のことりマート・傘の少女 | 秋夜の紅葉屋 |
 |---|---|---|
@@ -172,7 +172,7 @@ src/
 ## 新增場景
 
 1. 在 `src/scenes/<id>/` 建立場景模組。`main.js` 先呼叫 `setupRenderer()`，搭建完成、畫出第一格後設定 `window.__sceneStarted = true`，並送出 `scene:ready` 事件，可參考紅葉屋的 `main.js`。要沿用便利商店的街景時，改成呼叫 [src/scenes/konbini/scene.js](src/scenes/konbini/scene.js) 的 `buildKonbiniScene()`，它已經包含這些步驟，少女場景的 `main.js` 就是這樣做的。
-2. 複製 [ryokan.html](ryokan.html) 成新頁面，修改 `<title>`、`<nav id="scene-menu" data-current="<id>">` 與最後一行的 `main.js` 路徑；頁面檔名要加進 [deploy.yml](.github/workflows/deploy.yml)「整理網站檔案」步驟的複製清單。
+2. 複製 [ryokan.html](ryokan.html) 成新頁面，修改 `<title>`、`<nav id="scene-menu" data-current="<id>">` 與最後一行的 `main.js` 路徑；頁面檔名要加進 [deploy.yml](.github/workflows/deploy.yml)「Build」步驟的複製清單。
 3. 在 [src/ui/scenes.js](src/ui/scenes.js) 加一筆資料：`id`、`href`、`title`、`desc`、`when`、`style`、`thumb`、`accent`（強調色）、`veil`（轉場布幕的外圈與中心色）、`usesWasd`（用 WASD 操作少女就設為 `true`，W、S 快捷鍵會讓出來）。順序就是選單與數字鍵的順序。
 4. 放一張 640 × 400 的縮圖到 `assets/thumbs/`。
 5. 執行 `bun test`：[src/ui/scenes.test.js](src/ui/scenes.test.js) 會檢查場景目錄、頁面檔、縮圖與部署清單是否一致，漏改任何一處都會失敗。

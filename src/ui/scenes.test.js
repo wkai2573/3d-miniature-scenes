@@ -7,7 +7,7 @@ import { SCENES, wasdFree } from './scenes.js';
 const ROOT = join(import.meta.dir, '..', '..');
 const deploy = readFileSync(join(ROOT, '.github/workflows/deploy.yml'), 'utf8');
 
-// 部署時複製進網站的項目：「cp -r a b c _site/」這一行裡，目的地之前的每個項目
+// 部署時複製進網站的項目：「cp -r a b c dist/」這一行裡，目的地之前的每個項目
 const copied = (() => {
   const line = deploy.split('\n').find(l => /\bcp\s+-r\b/.test(l));
   if (!line) throw new Error('deploy.yml 找不到 cp -r 複製清單');
