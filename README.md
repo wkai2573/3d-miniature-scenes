@@ -69,11 +69,11 @@ $env:PORT=8080; bun start      # PowerShell
 
 ## 部署
 
-推送到 `main` 時，GitHub Actions（[deploy.yml](.github/workflows/deploy.yml)）會自動把網站部署到 GitHub Pages，大約一分鐘後生效。也可以在 repo 的 Actions 頁面手動執行「部署到 GitHub Pages」。
+推送到 `main` 時，GitHub Actions（[deploy.yml](.github/workflows/deploy.yml)）會自動建置並推送至共用部署中樞（[Hub](https://hub.ouo1.workers.dev/)），部署在 Cloudflare Worker 子路徑下（https://hub.ouo1.workers.dev/3d-miniature-scenes/）。也可以在 repo 的 Actions 頁面手動執行「Publish to Hub Worker」。
 
 - 只會上傳 `index.html`、`girl.html`、`ryokan.html`、`css/`、`src/`、`assets/`，其中 `*.test.js` 會刪掉；`server.mjs`、`package.json` 和 README 不會出現在網站上。
 - 所有路徑都是相對路徑，所以網站放在 `/3d-miniature-scenes/` 子路徑下也能正常運作。新增檔案時請不要用 `/` 開頭的絕對路徑。
-- 新增場景的頁面或資料夾，如果不在上面列出的位置，要一併加進 workflow 的「整理網站檔案」步驟。
+- 新增場景的頁面或資料夾，如果不在上面列出的位置，要一併加進 workflow 的「Build」步驟。
 
 ## 操作
 
@@ -113,7 +113,7 @@ index.html              雨夜のことりマート（預設頁）
 girl.html               雨夜のことりマート・傘の少女
 ryokan.html             秋夜の紅葉屋
 server.mjs              零相依的本機靜態伺服器（Bun）
-.github/workflows/      推送 main 時自動部署到 GitHub Pages
+.github/workflows/      推送 main 時自動部署至 Hub Worker 子路徑
 css/
   style.css             畫布、載入提示、錯誤訊息
   menu.css              場景選單、聲音按鈕與轉場布幕
