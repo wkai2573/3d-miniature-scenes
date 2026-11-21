@@ -2,7 +2,7 @@
 
 用 three.js 手工建模的日式微縮場景集，預設是夜景，也可以切換晴、雨、雪，或把時間拖到清晨、正午、黃昏。場景裡的模型、貼圖和動畫都由程式產生，只有少女場景的少女使用外部的 VRM 模型檔（授權見 [assets/characters/CREDITS.md](assets/characters/CREDITS.md)）；不需要建置步驟或安裝套件，開一個本機伺服器就能看。
 
-**線上版：https://hub.ouo1.workers.dev/3d-miniature-scenes/**
+**線上版：https://game.tempura.page/3d-miniature-scenes/**
 
 | 雨夜のことりマート | 雨夜のことりマート・傘の少女 | 秋夜の紅葉屋 |
 |---|---|---|
@@ -69,7 +69,7 @@ $env:PORT=8080; bun start      # PowerShell
 
 ## 部署
 
-推送到 `main` 時，GitHub Actions（[deploy.yml](.github/workflows/deploy.yml)）會自動建置並推送至共用部署中樞（[Hub](https://hub.ouo1.workers.dev/)），部署在 Cloudflare Worker 子路徑下（https://hub.ouo1.workers.dev/3d-miniature-scenes/）。也可以在 repo 的 Actions 頁面手動執行「Publish to Hub Worker」。
+推送到 `main` 時，GitHub Actions（[deploy.yml](.github/workflows/deploy.yml)）會自動建置並推送至共用部署中樞（[Hub](https://tempura.page/)），部署在 Cloudflare Worker 子路徑下（https://game.tempura.page/3d-miniature-scenes/）。也可以在 repo 的 Actions 頁面手動執行「Publish to Hub Worker」。
 
 - 只會上傳 `index.html`、`girl.html`、`ryokan.html`、`css/`、`src/`、`assets/`，其中 `*.test.js` 會刪掉；`server.mjs`、`package.json` 和 README 不會出現在網站上。
 - 所有路徑都是相對路徑，所以網站放在 `/3d-miniature-scenes/` 子路徑下也能正常運作。新增檔案時請不要用 `/` 開頭的絕對路徑。
