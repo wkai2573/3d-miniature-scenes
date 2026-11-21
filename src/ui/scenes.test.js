@@ -59,3 +59,27 @@ describe('場景目錄', () => {
     }
   });
 });
+
+describe('語系核心的載入', () => {
+  test('部署流程的複製清單涵蓋語系核心', () => {
+    expect(isCopied('src/i18n.js')).toBe(true);
+    expect(isCopied('src/ui/t.js')).toBe(true);
+  });
+
+  test('每個頁面都在轉場布幕與 boot 之前載入語系核心', () => {
+    for (const s of SCENES) {
+      const html = readFileSync(join(ROOT, s.href), 'utf8');
+      const at = name => html.indexOf(`<script src="${name}"></script>`);
+      expect(at('src/i18n.js'), `${s.id} 有載入語系核心`).toBeGreaterThan(-1);
+      expect(at('src/i18n.js'), `${s.id} 語系核心早於轉場布幕`).toBeLessThan(at('src/ui/veil.js'));
+      expect(at('src/i18n.js'), `${s.id} 語系核心早於 boot`).toBeLessThan(at('src/boot.js'));
+    }
+  });
+
+  test('語系核心晚於場景選單 nav，才讀得到頁面 id', () => {
+    for (const s of SCENES) {
+      const html = readFileSync(join(ROOT, s.href), 'utf8');
+      expect(html.indexOf('id="scene-menu"')).toBeLessThan(html.indexOf('src/i18n.js'));
+    }
+  });
+});

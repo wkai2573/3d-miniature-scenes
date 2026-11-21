@@ -7,6 +7,7 @@ import { MathUtils, Vector3 } from 'three';
 import { camera, controls, canvas } from '../../engine/renderer.js';
 import { fitCamera, clearView, orbit, inStore } from './cameraFit.js';
 import { keysIgnored } from './input.js';
+import { t } from '../../ui/t.js';
 
 const CHEST = 1.2;                    // 繞轉中心在少女腳下往上多高
 const DISTANCE = [1.5, 6];            // 滾輪調得到的距離範圍
@@ -78,7 +79,7 @@ export function createCameraRig(root, layout) {
   function toggle() {
     wanted = !wanted;
     if (wanted && !saved) enter();
-    tip(wanted ? '跟拍視角' : '俯瞰視角');
+    tip(t(wanted ? 'camera.follow' : 'camera.overview'));
   }
 
   addEventListener('keydown', e => {

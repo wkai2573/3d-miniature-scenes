@@ -1,10 +1,10 @@
 // 右上角的聲音按鈕：點一下展開小面板（開關、音量百分比），播放時四根音量條跳動。
 // 聲音本身在 src/engine/audio.js，兩邊用事件溝通；場景沒載入音訊引擎時按鈕不會出現。
 // 鍵盤：S 開關（場景用 WASD 操作少女時沒有）、− / ＋ 每次調 10%、面板開著時 Esc 關閉。
+// 切換語系時只更新文字與 aria 屬性，不重建 DOM；正在閃現的音量提示也跟著換語系。
 
 import { wasdFree } from './scenes.js';
-
-const TIP = '點一下畫面，播放環境音';
+import { t } from './t.js';
 
 export function initSound(current) {
   const key = wasdFree(current);   // 有沒有 S 快捷鍵
@@ -13,20 +13,20 @@ export function initSound(current) {
   el.hidden = true;
   el.style.setProperty('--accent', current.accent);
   el.innerHTML = /* html */`
-    <button class="snd-btn" type="button" aria-expanded="false" aria-controls="snd-panel" aria-label="環境音與音量" title="環境音${key ? '（S）' : ''}">
+    <button class="snd-btn" type="button" aria-expanded="false" aria-controls="snd-panel">
       <span class="snd-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     </button>
-    <span class="snd-tip" aria-hidden="true">${TIP}</span>
+    <span class="snd-tip" aria-hidden="true"></span>
     <div class="snd-panel" id="snd-panel">
       <div class="snd-row">
-        <span class="snd-label" id="snd-label">環境音</span>
+        <span class="snd-label" id="snd-label" data-t="snd.label"></span>
         <button class="snd-switch" type="button" role="switch" aria-checked="false" aria-labelledby="snd-label"><span></span></button>
       </div>
       <div class="snd-row">
-        <input class="snd-range" type="range" min="0" max="100" step="1" value="80" aria-label="音量">
+        <input class="snd-range" type="range" min="0" max="100" step="1" value="80" data-t-aria="snd.volume">
         <output class="snd-pct">80%</output>
       </div>
-      <p class="snd-keys">${key ? '<span><kbd>S</kbd> 開關</span>' : ''}<span><kbd>−</kbd><kbd>＋</kbd> 音量</span></p>
+      <p class="snd-keys">${key ? '<span><kbd>S</kbd> <span data-t="snd.keyToggle"></span></span>' : ''}<span><kbd>−</kbd><kbd>＋</kbd> <span data-t="snd.volume"></span></span></p>
     </div>`;
   document.body.appendChild(el);
 
@@ -36,7 +36,7 @@ export function initSound(current) {
   const range = el.querySelector('.snd-range');
   const pct = el.querySelector('.snd-pct');
   const tip = el.querySelector('.snd-tip');
-  let open = false, state = 'wait', volume = 80, dragging = false, flashTimer = 0;
+  let open = false, state = 'wait', volume = 80, dragging = false, flashTimer = 0, flashText = null;   // flashText：現在閃現的提示，產生文字的函式
   panel.inert = true;
 
   const paint = v => {
@@ -44,12 +44,27 @@ export function initSound(current) {
     pct.textContent = v + '%';
   };
 
+  const btnTitle = () => {
+    const text = t(state === 'on' ? 'snd.on' : state === 'off' ? 'snd.off' : 'snd.label');
+    return key ? t('snd.withKey', { text }) : text;
+  };
+
+  // 語系文字：按鈕 title 與 aria-label、提示、面板裡的字
+  function paintText() {
+    window.__i18n.apply(el);
+    btn.setAttribute('aria-label', t('snd.btn'));
+    btn.title = btnTitle();
+    tip.textContent = flashText ? flashText() : t('snd.tip');
+  }
+  paintText();
+  addEventListener('lang:change', paintText);
+
   addEventListener('sound:state', e => {
     ({ state, volume } = e.detail);
     el.hidden = false;
     el.dataset.state = state;
     sw.setAttribute('aria-checked', String(state !== 'off'));
-    btn.title = (state === 'on' ? '環境音播放中' : state === 'off' ? '環境音已關閉' : '環境音') + (key ? '（S）' : '');
+    btn.title = btnTitle();
     if (!dragging) { range.value = volume; paint(volume); }
   });
 
@@ -67,10 +82,11 @@ export function initSound(current) {
 
   // 按鍵調音量時，在按鈕下方短暫顯示目前的百分比
   function flash(text) {
-    tip.textContent = text;
+    flashText = text;
+    tip.textContent = text();
     el.classList.add('is-flash');
     clearTimeout(flashTimer);
-    flashTimer = setTimeout(() => { el.classList.remove('is-flash'); tip.textContent = TIP; }, 1200);
+    flashTimer = setTimeout(() => { el.classList.remove('is-flash'); flashText = null; tip.textContent = t('snd.tip'); }, 1200);
   }
 
   btn.addEventListener('click', e => {
@@ -96,8 +112,9 @@ export function initSound(current) {
     } else if (['-', '_', '=', '+'].includes(k)) {
       e.preventDefault();
       const v = Math.min(100, Math.max(0, Math.round((volume + (k === '-' || k === '_' ? -10 : 10)) / 10) * 10));
+      const off = state === 'off';
       setVolume(v);
-      if (!open) flash(`音量 ${v}%` + (state === 'off' ? '（已關閉）' : ''));
+      if (!open) flash(() => t(off ? 'snd.flashOff' : 'snd.flash', { v }));
     }
   });
 

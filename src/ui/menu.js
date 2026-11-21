@@ -1,9 +1,11 @@
 // 場景選單：左上角的按鈕展開場景卡片，選了別的場景就交給轉場布幕（src/ui/veil.js）換頁。
 // 鍵盤：M 開關選單、Esc 關閉、數字鍵直接切換、選單開著時上下鍵在卡片間移動。
+// 面板最下方有語言切換（繁中、EN、日本語）；切換時只更新文字與 aria 屬性，不重建 DOM，選單保持開啟、焦點留在按鈕上。
 // 右上角的聲音按鈕在 sound.js、下方的時間與天氣面板在 env.js，都跟著選單一起出現。
-import { SCENES, wasdFree } from './scenes.js';
+import { SCENES, wasdFree, sceneKey } from './scenes.js';
 import { initSound } from './sound.js';
 import { initEnv } from './env.js';
+import { t } from './t.js';
 
 const nav = document.getElementById('scene-menu');
 if (nav) initMenu(nav);
@@ -13,11 +15,13 @@ function initMenu(nav) {
   const keys = wasdFree(current);   // 場景用 WASD 操作少女時，天氣與聲音只能用滑鼠
   const no = s => 'No.' + String(SCENES.indexOf(s) + 1).padStart(2, '0');
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const hint = (k, key) => `<span>${k} <span data-t="${key}"></span></span>`;
 
+  // 會隨語系變的文字在這裡都是空的，由下面的 paint() 填入
   nav.classList.add('sm');
   nav.style.setProperty('--accent', current.accent);
   nav.innerHTML = /* html */`
-    <button class="sm-toggle" type="button" aria-expanded="false" aria-controls="sm-panel" aria-label="切換場景，目前是 ${esc(current.title)}">
+    <button class="sm-toggle" type="button" aria-expanded="false" aria-controls="sm-panel">
       <span class="cube" aria-hidden="true"></span>
       <span class="sm-now" aria-hidden="true">
         <span class="sm-no">${no(current)}</span>
@@ -26,33 +30,52 @@ function initMenu(nav) {
       <span class="sm-chev" aria-hidden="true"></span>
     </button>
     <div class="sm-panel" id="sm-panel">
-      <p class="sm-head"><span>微縮場景</span><span>共 ${SCENES.length} 座</span></p>
+      <p class="sm-head"><span data-t="menu.title"></span><span class="sm-count"></span></p>
       <ul class="sm-list">${SCENES.map((s, i) => /* html */`
         <li style="--i:${i}; --accent:${s.accent}">
           <a class="sm-card" href="${esc(s.href)}" data-id="${s.id}"${s === current ? ' aria-current="page"' : ''}>
             <span class="sm-thumb">
               <img src="${esc(s.thumb)}" alt="" width="640" height="400" decoding="async">
-              ${s === current ? '<span class="sm-badge">展示中</span>' : ''}
+              ${s === current ? '<span class="sm-badge" data-t="menu.current"></span>' : ''}
             </span>
             <span class="sm-info">
               <span class="sm-cardno">${no(s)}</span>
               <span class="sm-title" lang="ja">${esc(s.title)}</span>
-              <span class="sm-desc">${esc(s.desc)}</span>
-              <span class="sm-tags"><span>${esc(s.when)}</span><span>${esc(s.style)}</span></span>
+              <span class="sm-desc" data-t="${sceneKey(s, 'desc')}"></span>
+              <span class="sm-tags"><span data-t="${sceneKey(s, 'when')}"></span><span data-t="${sceneKey(s, 'style')}"></span></span>
             </span>
           </a>
         </li>`).join('')}
       </ul>
-      <p class="sm-keys"><span><kbd>M</kbd> 開關選單</span><span><kbd>1</kbd>–<kbd>${SCENES.length}</kbd> 切換場景</span>${keys ? '<span><kbd>S</kbd> 聲音</span>' : ''}<span><kbd>−</kbd><kbd>＋</kbd> 音量</span>${keys ? '<span><kbd>W</kbd> 天氣</span>' : ''}<span><kbd>←</kbd><kbd>→</kbd> 時間</span><span><kbd>Esc</kbd> 關閉</span></p>
+      <p class="sm-keys">${hint('<kbd>M</kbd>', 'menu.key.menu')}${hint(`<kbd>1</kbd>–<kbd>${SCENES.length}</kbd>`, 'menu.key.switch')}${keys ? hint('<kbd>S</kbd>', 'menu.key.sound') : ''}${hint('<kbd>−</kbd><kbd>＋</kbd>', 'menu.key.volume')}${keys ? hint('<kbd>W</kbd>', 'menu.key.weather') : ''}${hint('<kbd>←</kbd><kbd>→</kbd>', 'menu.key.time')}${hint('<kbd>Esc</kbd>', 'menu.key.close')}</p>
+      <div class="sm-lang">
+        <span class="sm-lang-label" id="sm-lang-label" data-t="menu.lang"></span>
+        <div class="sm-lang-btns" role="group" aria-labelledby="sm-lang-label">${window.__i18n.LANGS.map(l => /* html */`
+          <button class="sm-lang-btn" type="button" data-lang="${l.id}" lang="${l.id}" aria-pressed="false">${esc(l.label)}</button>`).join('')}
+        </div>
+      </div>
     </div>`;
-
-
-  const sound = initSound(current);
-  const env = initEnv(current);
 
   const toggle = nav.querySelector('.sm-toggle');
   const panel = nav.querySelector('.sm-panel');
   const cards = [...nav.querySelectorAll('.sm-card')];
+  const langBtns = [...nav.querySelectorAll('.sm-lang-btn')];
+
+  // 把所有會隨語系變的文字與 aria 屬性換成目前語系；不動 DOM 結構，開關狀態與焦點都保留
+  function paint() {
+    window.__i18n.apply(nav);
+    nav.setAttribute('aria-label', t('menu.nav'));
+    toggle.setAttribute('aria-label', t('menu.toggle', { title: current.title }));
+    nav.querySelector('.sm-count').textContent = t('menu.count', { n: SCENES.length });
+    for (const b of langBtns) b.setAttribute('aria-pressed', String(b.dataset.lang === window.__i18n.lang));
+  }
+  paint();
+  addEventListener('lang:change', paint);
+  langBtns.forEach(b => b.addEventListener('click', () => window.__i18n.set(b.dataset.lang)));
+
+  const sound = initSound(current);
+  const env = initEnv(current);
+
   let open = false, leaving = false;
   panel.inert = true;
 
@@ -79,7 +102,7 @@ function initMenu(nav) {
     if (s === current) { if (open) setOpen(false, false); else bump(); return; }
     leaving = true;
     const r = (from ?? toggle).getBoundingClientRect();
-    const d = { no: no(s), title: s.title, desc: s.desc, accent: s.accent, veil: s.veil };
+    const d = { no: no(s), title: s.title, desc: t(sceneKey(s, 'desc')), accent: s.accent, veil: s.veil };   // 說明是離開時的語系，換頁後語系沿用
     setOpen(false, false);
     dispatchEvent(new Event('scene:leave'));   // 環境音跟著淡出
     const veil = window.__veil;
