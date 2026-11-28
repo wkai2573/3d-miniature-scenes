@@ -19,7 +19,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
 
@@ -34,7 +34,7 @@ jobs:
           find dist -name '*.test.js' -delete
 
       - name: Checkout hub repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ env.HUB_REPO }}
           token: ${{ secrets.HUB_PUSH_TOKEN }}
